@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  frontend-service:
+    container_name: frontend-container
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+  backend-service:
+    container_name: backend-container
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://admin:adminpassword@database-service:5432/IA_JJ
+    volumes:
+      - ./backend:/app
+    networks:
+      - app-network
+    depends_on:
+      - database-service
+
+  database-service:
+    container_name: database-container
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=IA_JJ
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=adminpassword
+    networks:
+      - app-network
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db-data:
