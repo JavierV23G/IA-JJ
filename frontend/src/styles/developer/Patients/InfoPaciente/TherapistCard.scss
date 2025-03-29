@@ -1,0 +1,359 @@
+// Variables
+$color-primary: #2c7be5;
+$color-primary-light: #4facfe;
+$color-primary-dark: #1a68d1;
+$color-success: #10b981;
+$color-success-light: #34d399;
+$color-warning: #f59e0b;
+$color-danger: #ef4444;
+$color-danger-light: #f87171;
+$color-dark: #0f172a;
+$color-dark-blue: #071330;
+
+// Color variables para disciplinas
+$color-physical: #10b981;
+$color-physical-light: #34d399;
+$color-physical-dark: #059669;
+
+$color-occupational: #f59e0b;
+$color-occupational-light: #fbbf24;
+$color-occupational-dark: #d97706;
+
+$color-speech: #8b5cf6;
+$color-speech-light: #a78bfa;
+$color-speech-dark: #7c3aed;
+
+// Keyframes
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.therapist-card {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1.2rem;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  }
+  
+  &.empty {
+    justify-content: center;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    
+    .empty-message {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.8rem;
+      color: rgba(255, 255, 255, 0.4);
+      
+      i {
+        font-size: 1.8rem;
+      }
+      
+      span {
+        font-size: 0.95rem;
+      }
+    }
+  }
+  
+  &.editing {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+    
+    .therapist-selector {
+      position: relative;
+      
+      select {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        appearance: none;
+        background: rgba(255, 255, 255, 0.08);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgba(255, 255, 255, 0.6)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        background-size: 20px;
+        padding-right: 40px;
+        
+        &:focus {
+          outline: none;
+          border-color: rgba($color-primary, 0.5);
+          box-shadow: 0 0 0 3px rgba($color-primary, 0.2);
+        }
+        
+        &.loading {
+          background-image: none;
+        }
+        
+        option {
+          background-color: #0c1931;
+          color: white;
+        }
+      }
+      
+      .selector-loader {
+        position: absolute;
+        top: 50%;
+        right: 12px;
+        transform: translateY(-50%);
+        
+        .spinner {
+          width: 20px;
+          height: 20px;
+          border: 2px solid rgba(255, 255, 255, 0.1);
+          border-top-color: $color-primary-light;
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+        }
+      }
+    }
+    
+    .therapist-preview {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 0.8rem 1.2rem;
+      
+      .therapist-info {
+        .therapist-contact {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          
+          .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            
+            i {
+              color: rgba(255, 255, 255, 0.5);
+              font-size: 0.9rem;
+              width: 16px;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  .therapist-avatar {
+    flex-shrink: 0;
+    
+    .avatar-circle {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: white;
+      text-transform: uppercase;
+      position: relative;
+      overflow: hidden;
+      
+      .physical & {
+        background: linear-gradient(135deg, $color-physical, $color-physical-dark);
+        box-shadow: 0 4px 10px rgba($color-physical, 0.3);
+      }
+      
+      .occupational & {
+        background: linear-gradient(135deg, $color-occupational, $color-occupational-dark);
+        box-shadow: 0 4px 10px rgba($color-occupational, 0.3);
+      }
+      
+      .speech & {
+        background: linear-gradient(135deg, $color-speech, $color-speech-dark);
+        box-shadow: 0 4px 10px rgba($color-speech, 0.3);
+      }
+      
+      &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(225deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.5));
+        animation: shimmer 2s infinite;
+        background-size: 200px 100%;
+        opacity: 0.3;
+      }
+    }
+  }
+  
+  .therapist-info {
+    flex: 1;
+    min-width: 0; // Para que funcione text-overflow
+    
+    .therapist-name {
+      color: white;
+      font-size: 1.05rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .therapist-contact {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+      
+      @media (max-width: 1100px) {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+      }
+      
+      .contact-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        
+        i {
+          font-size: 0.9rem;
+          
+          .physical & {
+            color: $color-physical-light;
+          }
+          
+          .occupational & {
+            color: $color-occupational-light;
+          }
+          
+          .speech & {
+            color: $color-speech-light;
+          }
+        }
+        
+        .phone-link, .email-link {
+          color: rgba(255, 255, 255, 0.9);
+          text-decoration: none;
+          transition: all 0.2s;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          
+          &:hover {
+            .physical & {
+              color: $color-physical-light;
+            }
+            
+            .occupational & {
+              color: $color-occupational-light;
+            }
+            
+            .speech & {
+              color: $color-speech-light;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  .action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    
+    .action-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.8);
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        
+        &.message-btn {
+          .physical & {
+            background: rgba($color-primary, 0.2);
+            color: $color-primary-light;
+          }
+          
+          .occupational & {
+            background: rgba($color-primary, 0.2);
+            color: $color-primary-light;
+          }
+          
+          .speech & {
+            background: rgba($color-primary, 0.2);
+            color: $color-primary-light;
+          }
+        }
+        
+        &.call-btn {
+          .physical & {
+            background: rgba($color-physical, 0.2);
+            color: $color-physical-light;
+          }
+          
+          .occupational & {
+            background: rgba($color-occupational, 0.2);
+            color: $color-occupational-light;
+          }
+          
+          .speech & {
+            background: rgba($color-speech, 0.2);
+            color: $color-speech-light;
+          }
+        }
+      }
+      
+      &:active {
+        transform: translateY(0);
+      }
+    }
+  }
+}

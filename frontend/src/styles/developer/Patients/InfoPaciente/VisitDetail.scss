@@ -1,0 +1,809 @@
+// Variables para este componente
+$color-primary: #2c7be5;
+$color-primary-light: #4facfe;
+$color-primary-dark: #1a68d1;
+$color-success: #10b981;
+$color-success-light: #34d399;
+$color-danger: #ef4444;
+$color-danger-light: #f87171;
+$color-warning: #f59e0b;
+$color-warning-light: #fbbf24;
+$color-dark: #0f172a;
+$color-dark-blue: #071330;
+
+// Colores para disciplinas
+$color-pt: #10b981; // Verde para PT
+$color-ot: #f59e0b; // Naranja para OT
+$color-st: #8b5cf6; // Púrpura para ST
+
+// Colores para tipos de visitas
+$color-initial: #3b82f6; // Azul para Initial Eval
+$color-standard: #10b981; // Verde para Standard
+$color-recert: #8b5cf6; // Púrpura para ReCert
+$color-discharge: #f43f5e; // Rojo para Discharge
+$color-posthospital: #0ea5e9; // Celeste para Post-Hospital
+
+// Mixins
+@mixin glassmorphism($bg-color: rgba(19, 44, 80, 0.65), $blur: 10px, $border-color: rgba(255, 255, 255, 0.1)) {
+  background: $bg-color;
+  backdrop-filter: blur($blur);
+  -webkit-backdrop-filter: blur($blur);
+  border: 1px solid $border-color;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+@mixin button-style($bg-color, $text-color, $hover-bg-color) {
+  background: $bg-color;
+  color: $text-color;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  
+  &:hover {
+    background: $hover-bg-color;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Animaciones
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.visit-detail {
+  width: 100%;
+  @include glassmorphism(rgba(10, 30, 60, 0.8), 15px);
+  border-radius: 16px;
+  overflow: hidden;
+  animation: fadeIn 0.4s;
+  
+  // Variantes de color según disciplina
+  &.discipline-green {
+    border-top: 3px solid $color-pt;
+    
+    .detail-card {
+      &.visit-standard {
+        border-left: 4px solid $color-pt;
+      }
+    }
+  }
+  
+  &.discipline-orange {
+    border-top: 3px solid $color-ot;
+    
+    .detail-card {
+      &.visit-standard {
+        border-left: 4px solid $color-ot;
+      }
+    }
+  }
+  
+  &.discipline-purple {
+    border-top: 3px solid $color-st;
+    
+    .detail-card {
+      &.visit-standard {
+        border-left: 4px solid $color-st;
+      }
+    }
+  }
+  
+  // Encabezado del detalle
+  .detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.2rem 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    
+    h3 {
+      margin: 0;
+      font-size: 1.3rem;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      
+      i {
+        color: $color-primary-light;
+        font-size: 1.1rem;
+      }
+    }
+    
+    .close-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: rotate(90deg);
+      }
+    }
+  }
+  
+  // Contenido del detalle
+  .detail-content {
+    padding: 2rem;
+    
+    // Modo de visualización de detalles
+    .view-details {
+      .detail-card {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s;
+        margin-bottom: 1.5rem;
+        
+        // Variantes según tipo de visita
+        &.visit-initial {
+          border-left: 4px solid $color-initial;
+          
+          .card-header {
+            background: rgba($color-initial, 0.1);
+            
+            h3 i {
+              color: $color-initial;
+            }
+          }
+        }
+        
+        &.visit-standard {
+          border-left: 4px solid $color-standard;
+          
+          .card-header {
+            background: rgba($color-standard, 0.1);
+            
+            h3 i {
+              color: $color-standard;
+            }
+          }
+        }
+        
+        &.visit-recert {
+          border-left: 4px solid $color-recert;
+          
+          .card-header {
+            background: rgba($color-recert, 0.1);
+            
+            h3 i {
+              color: $color-recert;
+            }
+          }
+        }
+        
+        &.visit-discharge {
+          border-left: 4px solid $color-discharge;
+          
+          .card-header {
+            background: rgba($color-discharge, 0.1);
+            
+            h3 i {
+              color: $color-discharge;
+            }
+          }
+        }
+        
+        &.visit-posthospital {
+          border-left: 4px solid $color-posthospital;
+          
+          .card-header {
+            background: rgba($color-posthospital, 0.1);
+            
+            h3 i {
+              color: $color-posthospital;
+            }
+          }
+        }
+        
+        // Encabezado de la tarjeta
+        .card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 1.5rem;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+          
+          h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            
+            i {
+              font-size: 1.1rem;
+            }
+          }
+          
+          .status-badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            
+            &.scheduled {
+              background: rgba($color-primary, 0.2);
+              color: $color-primary-light;
+            }
+            
+            &.completed {
+              background: rgba($color-success, 0.2);
+              color: $color-success-light;
+            }
+            
+            &.missed {
+              background: rgba($color-danger, 0.2);
+              color: $color-danger-light;
+            }
+            
+            &.cancelled {
+              background: rgba($color-warning, 0.2);
+              color: $color-warning-light;
+            }
+          }
+        }
+        
+        // Contenido de la tarjeta
+        .card-content {
+          padding: 1.5rem;
+          
+          .detail-item {
+            margin-bottom: 1.2rem;
+            
+            &:last-child {
+              margin-bottom: 0;
+            }
+            
+            .detail-label {
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+              margin-bottom: 0.5rem;
+              
+              i {
+                color: rgba(255, 255, 255, 0.6);
+                width: 16px;
+                text-align: center;
+              }
+              
+              span {
+                font-size: 0.9rem;
+                color: rgba(255, 255, 255, 0.6);
+                font-weight: 500;
+              }
+            }
+            
+            .detail-value {
+              color: white;
+              padding-left: 1.5rem;
+              
+              .therapist-role {
+                color: rgba(255, 255, 255, 0.7);
+                font-size: 0.9rem;
+                margin-left: 0.3rem;
+              }
+            }
+            
+            &.notes {
+              background: rgba(255, 255, 255, 0.02);
+              border-radius: 8px;
+              padding: 1rem;
+              margin-top: 1.5rem;
+            }
+          }
+        }
+        
+        // Acciones de la tarjeta
+        .card-actions {
+          display: flex;
+          gap: 0.8rem;
+          padding: 0 1.5rem 1.5rem;
+          
+          .action-btn {
+            padding: 0.7rem 1.2rem;
+            border-radius: 8px;
+            border: none;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            
+            i {
+              font-size: 0.9rem;
+            }
+            
+            &.edit {
+              background: rgba($color-primary, 0.2);
+              color: $color-primary-light;
+              
+              &:hover {
+                background: rgba($color-primary, 0.3);
+                transform: translateY(-2px);
+              }
+            }
+            
+            &.documents {
+              background: rgba($color-warning, 0.2);
+              color: $color-warning-light;
+              
+              &:hover {
+                background: rgba($color-warning, 0.3);
+                transform: translateY(-2px);
+              }
+            }
+            
+            &.delete {
+              background: rgba($color-danger, 0.2);
+              color: $color-danger-light;
+              
+              &:hover {
+                background: rgba($color-danger, 0.3);
+                transform: translateY(-2px);
+              }
+            }
+          }
+        }
+      }
+      
+      // Sección de documentos
+      .documents-section {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+        overflow: hidden;
+        padding: 1.5rem;
+        animation: slideIn 0.4s;
+        
+        h4 {
+          margin: 0 0 1.5rem;
+          font-size: 1.1rem;
+          color: white;
+          display: flex;
+          align-items: center;
+          gap: 0.8rem;
+          
+          i {
+            color: $color-warning;
+          }
+        }
+        
+        // Estado de carga de documentos
+        .loading-documents {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 1rem;
+          padding: 2rem 0;
+          
+          .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid $color-primary-light;
+            animation: spin 1s linear infinite;
+          }
+          
+          span {
+            color: rgba(255, 255, 255, 0.7);
+          }
+        }
+        
+        // Lista de documentos
+        .documents-list {
+          .document-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-bottom: 0.8rem;
+            
+            .document-icon {
+              width: 40px;
+              height: 40px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: rgba($color-primary, 0.1);
+              border-radius: 8px;
+              
+              i {
+                font-size: 1.2rem;
+                color: $color-primary-light;
+                
+                &.fa-file-pdf {
+                  color: #f87171;
+                }
+                
+                &.fa-file-word {
+                  color: #60a5fa;
+                }
+              }
+            }
+            
+            .document-info {
+              flex: 1;
+              min-width: 0; // Para que ellipsis funcione
+              
+              .document-name {
+                display: block;
+                color: white;
+                font-weight: 500;
+                margin-bottom: 0.3rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+              }
+              
+              .document-meta {
+                font-size: 0.85rem;
+                color: rgba(255, 255, 255, 0.6);
+              }
+            }
+            
+            .document-actions {
+              display: flex;
+              gap: 0.5rem;
+              
+              .doc-action-btn {
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(255, 255, 255, 0.1);
+                border: none;
+                border-radius: 6px;
+                color: white;
+                cursor: pointer;
+                transition: all 0.3s;
+                
+                &:hover {
+                  background: rgba(255, 255, 255, 0.2);
+                  transform: translateY(-2px);
+                }
+                
+                &.view:hover {
+                  color: $color-primary-light;
+                }
+                
+                &.download:hover {
+                  color: $color-success-light;
+                }
+              }
+            }
+          }
+          
+          // Sección de carga
+          .upload-section {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: center;
+            
+            .upload-btn {
+              @include button-style(rgba($color-primary, 0.2), white, rgba($color-primary, 0.3));
+              
+              &:hover {
+                box-shadow: 0 4px 12px rgba($color-primary, 0.2);
+              }
+            }
+          }
+        }
+        
+        // Mensaje de no documentos
+        .no-documents {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          padding: 2rem 0;
+          
+          i {
+            font-size: 3rem;
+            color: rgba(255, 255, 255, 0.2);
+            margin-bottom: 1.5rem;
+          }
+          
+          p {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 1.5rem;
+          }
+          
+          .upload-btn {
+            @include button-style(rgba($color-primary, 0.2), white, rgba($color-primary, 0.3));
+            
+            &:hover {
+              box-shadow: 0 4px 12px rgba($color-primary, 0.2);
+            }
+          }
+        }
+      }
+    }
+    
+    // Modo de edición (formulario)
+    .edit-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      
+      // Fila de formulario
+      .form-row {
+        display: flex;
+        gap: 1.5rem;
+        
+        @media (max-width: 768px) {
+          flex-direction: column;
+        }
+        
+        // Grupo de formulario
+        .form-group {
+          flex: 1;
+          
+          &.full-width {
+            width: 100%;
+          }
+          
+          label {
+            display: block;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 0.8rem;
+            font-weight: 500;
+          }
+          
+          // Inputs
+          .date-input, .time-input {
+            position: relative;
+            
+            i {
+              position: absolute;
+              top: 50%;
+              left: 1rem;
+              transform: translateY(-50%);
+              color: rgba(255, 255, 255, 0.5);
+              font-size: 0.9rem;
+              pointer-events: none;
+            }
+            
+            input {
+              width: 100%;
+              padding: 0.8rem 1rem 0.8rem 2.5rem;
+              background: rgba(255, 255, 255, 0.05);
+              border: 1px solid rgba(255, 255, 255, 0.1);
+              border-radius: 8px;
+              color: white;
+              font-size: 0.95rem;
+              
+              &:focus {
+                outline: none;
+                border-color: rgba($color-primary, 0.5);
+                background: rgba(255, 255, 255, 0.08);
+                box-shadow: 0 0 0 3px rgba($color-primary, 0.2);
+              }
+              
+              &::-webkit-calendar-picker-indicator {
+                filter: invert(1);
+                opacity: 0.5;
+              }
+            }
+            
+            select {
+              background: rgba(255, 255, 255, 0.05);
+              border: 1px solid rgba(255, 255, 255, 0.1);
+              border-radius: 8px;
+              color: white;
+              padding: 0.8rem 1rem;
+              cursor: pointer;
+              font-size: 0.95rem;
+              
+              &:focus {
+                outline: none;
+                border-color: rgba($color-primary, 0.5);
+                box-shadow: 0 0 0 3px rgba($color-primary, 0.2);
+              }
+              
+              option {
+                background-color: $color-dark-blue;
+                color: white;
+              }
+            }
+          }
+          
+          // Select para estado
+          .status-select {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: white;
+            font-size: 0.95rem;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgba(255, 255, 255, 0.5)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            
+            &:focus {
+              outline: none;
+              border-color: rgba($color-primary, 0.5);
+              background-color: rgba(255, 255, 255, 0.08);
+              box-shadow: 0 0 0 3px rgba($color-primary, 0.2);
+            }
+            
+            option {
+              background-color: $color-dark-blue;
+              color: white;
+            }
+          }
+          
+          // Textarea para notas
+          textarea {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: white;
+            font-size: 0.95rem;
+            resize: vertical;
+            
+            &:focus {
+              outline: none;
+              border-color: rgba($color-primary, 0.5);
+              box-shadow: 0 0 0 2px rgba($color-primary, 0.2);
+            }
+            
+            &::placeholder {
+              color: rgba(255, 255, 255, 0.3);
+            }
+          }
+        }
+      }
+      
+      // Acciones del formulario
+      .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 1rem;
+        
+        // Botón de cancelar
+        .cancel-btn {
+          @include button-style(rgba(255, 255, 255, 0.05), white, rgba(255, 255, 255, 0.1));
+          
+          &:hover {
+            transform: translateY(-2px);
+          }
+        }
+        
+        // Botón de guardar
+        .save-btn {
+          @include button-style(rgba($color-success, 0.8), white, $color-success);
+          
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba($color-success, 0.3);
+          }
+          
+          &:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+          }
+          
+          // Spinner para carga
+          .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid white;
+            animation: spin 1s linear infinite;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Estilos responsivos
+@media (max-width: 768px) {
+  .visit-detail {
+    .detail-content {
+      padding: 1.5rem;
+      
+      // Ajustes para vista de detalles
+      .view-details {
+        .detail-card {
+          .card-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.8rem;
+          }
+          
+          .card-actions {
+            flex-wrap: wrap;
+            
+            .action-btn {
+              flex: 1;
+              justify-content: center;
+            }
+          }
+        }
+        
+        .documents-section {
+          .documents-list {
+            .document-item {
+              flex-direction: column;
+              align-items: flex-start;
+              
+              .document-icon {
+                margin-bottom: 0.8rem;
+              }
+              
+              .document-actions {
+                width: 100%;
+                justify-content: flex-end;
+                margin-top: 1rem;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

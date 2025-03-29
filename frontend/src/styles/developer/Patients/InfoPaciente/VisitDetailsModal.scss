@@ -1,0 +1,691 @@
+// Variables para este componente
+$color-primary: #2c7be5;
+$color-primary-light: #4facfe;
+$color-primary-dark: #1a68d1;
+$color-success: #10b981;
+$color-success-light: #34d399;
+$color-danger: #ef4444;
+$color-danger-light: #f87171;
+$color-warning: #f59e0b;
+$color-warning-light: #fbbf24;
+$color-dark: #0f172a;
+$color-dark-blue: #071330;
+
+// Colores para tipos de visitas
+$color-initial: #3b82f6; // Azul para Initial Eval
+$color-standard: #10b981; // Verde para Standard
+$color-recert: #8b5cf6; // Púrpura para ReCert
+$color-discharge: #f43f5e; // Rojo para Discharge
+$color-posthospital: #0ea5e9; // Celeste para Post-Hospital
+
+// Mixins
+@mixin glassmorphism($bg-color: rgba(19, 44, 80, 0.95), $blur: 10px, $border-color: rgba(255, 255, 255, 0.1)) {
+  background: $bg-color;
+  backdrop-filter: blur($blur);
+  -webkit-backdrop-filter: blur($blur);
+  border: 1px solid $border-color;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+}
+
+@mixin button-style($bg-color, $text-color, $hover-bg-color) {
+  background: $bg-color;
+  color: $text-color;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  
+  &:hover {
+    background: $hover-bg-color;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Animaciones
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// Estilos principales
+.visit-details-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  
+  .visit-details-modal {
+    width: 90%;
+    max-width: 650px;
+    max-height: 90vh;
+    @include glassmorphism();
+    border-radius: 16px;
+    overflow: hidden;
+    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, $color-primary, $color-primary-light);
+      z-index: 1;
+    }
+    
+    // Variantes según tipo de visita
+    &.visit-initial::before {
+      background: linear-gradient(90deg, $color-initial, lighten($color-initial, 15%));
+    }
+    
+    &.visit-standard::before {
+      background: linear-gradient(90deg, $color-standard, lighten($color-standard, 15%));
+    }
+    
+    &.visit-recert::before {
+      background: linear-gradient(90deg, $color-recert, lighten($color-recert, 15%));
+    }
+    
+    &.visit-discharge::before {
+      background: linear-gradient(90deg, $color-discharge, lighten($color-discharge, 15%));
+    }
+    
+    &.visit-posthospital::before {
+      background: linear-gradient(90deg, $color-posthospital, lighten($color-posthospital, 15%));
+    }
+    
+    .modal-header {
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, 
+          rgba(255, 255, 255, 0), 
+          rgba(255, 255, 255, 0.1), 
+          rgba(255, 255, 255, 0));
+      }
+      
+      h2 {
+        margin: 0;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        
+        i {
+          color: $color-primary-light;
+          font-size: 1.3rem;
+        }
+      }
+      
+      .close-btn {
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.2rem;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        
+        &:hover {
+          background: rgba(255, 255, 255, 0.1);
+          color: white;
+          transform: rotate(90deg);
+        }
+      }
+    }
+    
+    .modal-content {
+      padding: 2rem;
+      overflow-y: auto;
+      max-height: calc(90vh - 80px); // Restar altura del header
+      
+      &::-webkit-scrollbar {
+        width: 6px;
+      }
+      
+      &::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+      }
+      
+      &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
+      }
+      
+      // Modo de visualización
+      .visit-details-view {
+        .visit-type-header {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          padding: 1.5rem;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 12px;
+          margin-bottom: 2rem;
+          position: relative;
+          overflow: hidden;
+          
+          &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 5px;
+            background: $color-primary;
+          }
+          
+          &.visit-initial::before {
+            background: $color-initial;
+          }
+          
+          &.visit-standard::before {
+            background: $color-standard;
+          }
+          
+          &.visit-recert::before {
+            background: $color-recert;
+          }
+          
+          &.visit-discharge::before {
+            background: $color-discharge;
+          }
+          
+          &.visit-posthospital::before {
+            background: $color-posthospital;
+          }
+          
+          .type-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            
+            i {
+              font-size: 1.4rem;
+              color: white;
+            }
+          }
+          
+          h3 {
+            font-size: 1.4rem;
+            color: white;
+            margin: 0;
+            flex-grow: 1;
+          }
+          
+          .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            
+            &::before {
+              content: '';
+              width: 8px;
+              height: 8px;
+              border-radius: 50%;
+              display: block;
+            }
+            
+            &.scheduled {
+              background: rgba($color-primary, 0.2);
+              color: $color-primary-light;
+              
+              &::before {
+                background: $color-primary-light;
+              }
+            }
+            
+            &.completed {
+              background: rgba($color-success, 0.2);
+              color: $color-success-light;
+              
+              &::before {
+                background: $color-success-light;
+              }
+            }
+            
+            &.missed {
+              background: rgba($color-danger, 0.2);
+              color: $color-danger-light;
+              
+              &::before {
+                background: $color-danger-light;
+              }
+            }
+            
+            &.cancelled {
+              background: rgba($color-warning, 0.2);
+              color: $color-warning-light;
+              
+              &::before {
+                background: $color-warning-light;
+              }
+            }
+          }
+        }
+        
+        .visit-info-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1.5rem;
+          margin-bottom: 2rem;
+          
+          @media (max-width: 600px) {
+            grid-template-columns: 1fr;
+          }
+          
+          .info-item {
+            &.full-width {
+              grid-column: 1 / -1;
+            }
+            
+            &.notes {
+              background: rgba(255, 255, 255, 0.03);
+              border-radius: 8px;
+              padding: 1.2rem;
+              margin-top: 0.5rem;
+            }
+            
+            .info-label {
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+              margin-bottom: 0.5rem;
+              
+              i {
+                color: rgba(255, 255, 255, 0.6);
+                font-size: 0.9rem;
+                width: 20px;
+                text-align: center;
+              }
+              
+              span {
+                font-size: 0.9rem;
+                color: rgba(255, 255, 255, 0.6);
+                font-weight: 500;
+              }
+            }
+            
+            .info-value {
+              font-size: 1.1rem;
+              color: white;
+              padding-left: 1.8rem;
+              line-height: 1.5;
+              
+              &.therapist {
+                display: flex;
+                flex-direction: column;
+                
+                .name {
+                  font-weight: 500;
+                }
+                
+                .role {
+                  font-size: 0.9rem;
+                  color: rgba(255, 255, 255, 0.7);
+                }
+              }
+            }
+          }
+        }
+        
+        .action-buttons {
+          display: flex;
+          gap: 1rem;
+          margin-top: 2rem;
+          
+          @media (max-width: 600px) {
+            flex-direction: column;
+          }
+          
+          button {
+            flex: 1;
+            min-height: 44px;
+            
+            &.edit-btn {
+              @include button-style(rgba($color-primary, 0.2), white, rgba($color-primary, 0.3));
+              
+              &:hover {
+                box-shadow: 0 5px 15px rgba($color-primary, 0.2);
+              }
+            }
+            
+            &.docs-btn {
+              @include button-style(rgba($color-warning, 0.2), white, rgba($color-warning, 0.3));
+              
+              &:hover {
+                box-shadow: 0 5px 15px rgba($color-warning, 0.2);
+              }
+            }
+            
+            &.delete-btn {
+              @include button-style(rgba($color-danger, 0.2), white, rgba($color-danger, 0.3));
+              
+              &:hover {
+                box-shadow: 0 5px 15px rgba($color-danger, 0.2);
+              }
+            }
+          }
+        }
+      }
+      
+      // Modo de edición (formulario)
+      .visit-edit-form {
+        .form-row {
+          display: flex;
+          gap: 1.5rem;
+          margin-bottom: 1.5rem;
+          
+          @media (max-width: 600px) {
+            flex-direction: column;
+            gap: 1rem;
+          }
+          
+          .form-group {
+            flex: 1;
+            
+            &.full-width {
+              width: 100%;
+            }
+            
+            label {
+              display: block;
+              font-size: 0.9rem;
+              color: rgba(255, 255, 255, 0.7);
+              margin-bottom: 0.8rem;
+              font-weight: 500;
+            }
+            
+            .input-icon {
+              position: relative;
+              
+              i {
+                position: absolute;
+                top: 50%;
+                left: 1rem;
+                transform: translateY(-50%);
+                color: rgba(255, 255, 255, 0.5);
+                font-size: 0.9rem;
+                pointer-events: none;
+              }
+              
+              input {
+                width: 100%;
+                padding: 0.8rem 1rem 0.8rem 2.5rem;
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                color: white;
+                font-size: 0.95rem;
+                
+                &:focus {
+                  outline: none;
+                  border-color: rgba($color-primary, 0.5);
+                  background: rgba(255, 255, 255, 0.08);
+                  box-shadow: 0 0 0 3px rgba($color-primary, 0.2);
+                }
+                
+                &::-webkit-calendar-picker-indicator {
+                  filter: invert(1);
+                  opacity: 0.5;
+                }
+              }
+              
+              select {
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                color: white;
+                padding: 0.8rem 1rem;
+                appearance: none;
+                cursor: pointer;
+                
+                &:focus {
+                  outline: none;
+                  border-color: rgba($color-primary, 0.5);
+                  box-shadow: 0 0 0 3px rgba($color-primary, 0.2);
+                }
+                
+                option {
+                  background-color: $color-dark-blue;
+                  color: white;
+                }
+              }
+            }
+            
+            .select-wrapper {
+              position: relative;
+              
+              select {
+                width: 100%;
+                padding: 0.8rem 1rem;
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                color: white;
+                font-size: 0.95rem;
+                appearance: none;
+                cursor: pointer;
+                
+                &:focus {
+                  outline: none;
+                  border-color: rgba($color-primary, 0.5);
+                  background: rgba(255, 255, 255, 0.08);
+                  box-shadow: 0 0 0 3px rgba($color-primary, 0.2);
+                }
+                
+                option {
+                  background-color: $color-dark-blue;
+                  color: white;
+                }
+                
+                &.status-select {
+                  &.scheduled {
+                    border-color: rgba($color-primary, 0.3);
+                  }
+                  
+                  &.completed {
+                    border-color: rgba($color-success, 0.3);
+                  }
+                  
+                  &.missed {
+                    border-color: rgba($color-danger, 0.3);
+                  }
+                  
+                  &.cancelled {
+                    border-color: rgba($color-warning, 0.3);
+                  }
+                }
+              }
+              
+              i {
+                position: absolute;
+                top: 50%;
+                right: 1rem;
+                transform: translateY(-50%);
+                color: rgba(255, 255, 255, 0.5);
+                font-size: 0.8rem;
+                pointer-events: none;
+              }
+            }
+            
+            textarea {
+              width: 100%;
+              padding: 1rem;
+              background: rgba(255, 255, 255, 0.05);
+              border: 1px solid rgba(255, 255, 255, 0.1);
+              border-radius: 8px;
+              color: white;
+              font-size: 0.95rem;
+              resize: vertical;
+              min-height: 100px;
+              
+              &:focus {
+                outline: none;
+                border-color: rgba($color-primary, 0.5);
+                background: rgba(255, 255, 255, 0.08);
+                box-shadow: 0 0 0 3px rgba($color-primary, 0.2);
+              }
+              
+              &::placeholder {
+                color: rgba(255, 255, 255, 0.3);
+              }
+            }
+          }
+        }
+        
+        .form-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 1rem;
+          margin-top: 2rem;
+          
+          @media (max-width: 600px) {
+            flex-direction: column-reverse;
+          }
+          
+          .cancel-btn {
+            @include button-style(rgba(255, 255, 255, 0.05), white, rgba(255, 255, 255, 0.1));
+          }
+          
+          .save-btn {
+            @include button-style(rgba($color-success, 0.8), white, $color-success);
+            min-width: 150px;
+            
+            &:hover {
+              box-shadow: 0 5px 15px rgba($color-success, 0.3);
+            }
+            
+            &:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+                transform: none;
+                box-shadow: none;
+              }
+              
+              .spinner {
+                width: 20px;
+                height: 20px;
+                border: 2px solid rgba(255, 255, 255, 0.3);
+                border-radius: 50%;
+                border-top: 2px solid white;
+                animation: spin 1s linear infinite;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  // Diseño responsive adicional
+  @media (max-width: 768px) {
+    .visit-details-modal-overlay {
+      .visit-details-modal {
+        width: 95%;
+        
+        .modal-header {
+          padding: 1.2rem;
+          
+          h2 {
+            font-size: 1.3rem;
+          }
+        }
+        
+        .modal-content {
+          padding: 1.5rem;
+          
+          .visit-details-view {
+            .visit-type-header {
+              padding: 1.2rem;
+              flex-direction: column;
+              text-align: center;
+              gap: 0.8rem;
+              
+              h3 {
+                font-size: 1.3rem;
+              }
+            }
+            
+            .visit-info-grid {
+              gap: 1.2rem;
+              
+              .info-item {
+                .info-value {
+                  font-size: 1rem;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
