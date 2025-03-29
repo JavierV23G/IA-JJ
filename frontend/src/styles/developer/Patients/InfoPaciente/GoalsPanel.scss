@@ -1,0 +1,528 @@
+// Variables
+$color-primary: #2c7be5;
+$color-primary-light: #4facfe;
+$color-primary-dark: #1a68d1;
+$color-success: #10b981;
+$color-success-light: #34d399;
+$color-warning: #f59e0b;
+$color-danger: #ef4444;
+$color-danger-light: #f87171;
+$color-dark: #0f172a;
+$color-dark-blue: #071330;
+
+// Color variables para disciplinas
+$color-physical: #10b981;
+$color-physical-light: #34d399;
+$color-physical-dark: #059669;
+
+$color-occupational: #f59e0b;
+$color-occupational-light: #fbbf24;
+$color-occupational-dark: #d97706;
+
+$color-speech: #8b5cf6;
+$color-speech-light: #a78bfa;
+$color-speech-dark: #7c3aed;
+
+// Mixins
+@mixin button-style($bg-color, $text-color, $hover-bg-color) {
+  background: $bg-color;
+  color: $text-color;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  
+  &:hover {
+    background: $hover-bg-color;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Animaciones
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -100px;
+  }
+  40%, 100% {
+    background-position: 320px;
+  }
+}
+
+.goals-panel {
+  margin-top: 1.5rem;
+  border-radius: 12px;
+  overflow: hidden;
+  animation: fadeIn 0.5s ease-out forwards;
+  
+  &.green {
+    background: rgba($color-physical, 0.05);
+    border: 1px solid rgba($color-physical, 0.1);
+  }
+  
+  &.orange {
+    background: rgba($color-occupational, 0.05);
+    border: 1px solid rgba($color-occupational, 0.1);
+  }
+  
+  &.purple {
+    background: rgba($color-speech, 0.05);
+    border: 1px solid rgba($color-speech, 0.1);
+  }
+  
+  .goals-header {
+    padding: 1.2rem 1.5rem;
+    background: rgba(0, 0, 0, 0.1);
+    
+    h4 {
+      margin: 0;
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      
+      i {
+        .green & {
+          color: $color-physical-light;
+        }
+        
+        .orange & {
+          color: $color-occupational-light;
+        }
+        
+        .purple & {
+          color: $color-speech-light;
+        }
+      }
+    }
+  }
+  
+  .goals-content {
+    padding: 1.5rem;
+    
+    .goals-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2.5rem 0;
+      text-align: center;
+      
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        margin-bottom: 1.5rem;
+        position: relative;
+        
+        &::after {
+          content: '';
+          position: absolute;
+          top: -3px;
+          left: -3px;
+          right: -3px;
+          bottom: -3px;
+          border-radius: 50%;
+          border: 3px solid transparent;
+          animation: spin 1.2s linear infinite;
+        }
+        
+        .green &::after {
+          border-top-color: $color-physical-light;
+        }
+        
+        .orange &::after {
+          border-top-color: $color-occupational-light;
+        }
+        
+        .purple &::after {
+          border-top-color: $color-speech-light;
+        }
+      }
+      
+      span {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1rem;
+        background: linear-gradient(90deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.5));
+        background-size: 200px 100%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: shimmer 2s infinite linear;
+      }
+    }
+    
+    .goals-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      
+      .goal-item {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        padding: 1.2rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        animation: fadeIn 0.4s ease-out forwards;
+        
+        &:hover {
+          background: rgba(255, 255, 255, 0.08);
+          transform: translateY(-3px);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .goal-header {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 1rem;
+          
+          .goal-info {
+            flex: 1;
+            
+            .goal-text {
+              color: white;
+              font-size: 1rem;
+              line-height: 1.5;
+              margin-bottom: 0.5rem;
+            }
+            
+            .goal-target {
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+              font-size: 0.85rem;
+              color: rgba(255, 255, 255, 0.6);
+              
+              i {
+                .green & {
+                  color: $color-physical-light;
+                }
+                
+                .orange & {
+                  color: $color-occupational-light;
+                }
+                
+                .purple & {
+                  color: $color-speech-light;
+                }
+              }
+            }
+          }
+          
+          .delete-goal-btn {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.4);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-left: 1rem;
+            
+            &:hover {
+              background: rgba($color-danger, 0.1);
+              color: $color-danger-light;
+              transform: scale(1.1);
+            }
+          }
+        }
+        
+        .goal-progress {
+          .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            
+            .progress-label {
+              font-size: 0.85rem;
+              color: rgba(255, 255, 255, 0.6);
+            }
+            
+            .progress-value {
+              font-size: 0.85rem;
+              font-weight: 600;
+              
+              .green & {
+                color: $color-physical-light;
+              }
+              
+              .orange & {
+                color: $color-occupational-light;
+              }
+              
+              .purple & {
+                color: $color-speech-light;
+              }
+            }
+          }
+          
+          .progress-bar-container {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.8rem;
+            
+            .progress-bar {
+              height: 100%;
+              border-radius: 4px;
+              position: relative;
+              transition: width 0.5s ease;
+              
+              &::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(
+                  90deg, 
+                  rgba(255, 255, 255, 0), 
+                  rgba(255, 255, 255, 0.2), 
+                  rgba(255, 255, 255, 0)
+                );
+                animation: shimmer 2s infinite;
+              }
+              
+              &.low {
+                background: linear-gradient(90deg, $color-danger, $color-danger-light);
+              }
+              
+              &.medium {
+                background: linear-gradient(90deg, $color-warning, lighten($color-warning, 10%));
+              }
+              
+              &.high {
+                .green & {
+                  background: linear-gradient(90deg, $color-physical-dark, $color-physical-light);
+                }
+                
+                .orange & {
+                  background: linear-gradient(90deg, $color-occupational-dark, $color-occupational-light);
+                }
+                
+                .purple & {
+                  background: linear-gradient(90deg, $color-speech-dark, $color-speech-light);
+                }
+              }
+            }
+          }
+          
+          .progress-slider {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            border-radius: 3px;
+            
+            &::-webkit-slider-thumb {
+              -webkit-appearance: none;
+              appearance: none;
+              width: 18px;
+              height: 18px;
+              border-radius: 50%;
+              cursor: pointer;
+              
+              .green & {
+                background: $color-physical;
+                box-shadow: 0 0 10px rgba($color-physical, 0.5);
+              }
+              
+              .orange & {
+                background: $color-occupational;
+                box-shadow: 0 0 10px rgba($color-occupational, 0.5);
+              }
+              
+              .purple & {
+                background: $color-speech;
+                box-shadow: 0 0 10px rgba($color-speech, 0.5);
+              }
+            }
+            
+            &::-moz-range-thumb {
+              width: 18px;
+              height: 18px;
+              border-radius: 50%;
+              cursor: pointer;
+              border: none;
+              
+              .green & {
+                background: $color-physical;
+                box-shadow: 0 0 10px rgba($color-physical, 0.5);
+              }
+              
+              .orange & {
+                background: $color-occupational;
+                box-shadow: 0 0 10px rgba($color-occupational, 0.5);
+              }
+              
+              .purple & {
+                background: $color-speech;
+                box-shadow: 0 0 10px rgba($color-speech, 0.5);
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    .no-goals {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1rem;
+      text-align: center;
+      
+      i {
+        font-size: 3rem;
+        color: rgba(255, 255, 255, 0.1);
+        margin-bottom: 1.5rem;
+      }
+      
+      p {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 1.1rem;
+        margin: 0;
+      }
+    }
+    
+    .add-goal-form {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      
+      h5 {
+        margin: 0 0 1.2rem 0;
+        color: white;
+        font-size: 1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        
+        i {
+          .green & {
+            color: $color-physical-light;
+          }
+          
+          .orange & {
+            color: $color-occupational-light;
+          }
+          
+          .purple & {
+            color: $color-speech-light;
+          }
+        }
+      }
+      
+      .form-group {
+        margin-bottom: 1.2rem;
+        
+        label {
+          display: block;
+          font-size: 0.9rem;
+          color: rgba(255, 255, 255, 0.7);
+          margin-bottom: 0.5rem;
+          font-weight: 500;
+        }
+        
+        input, textarea {
+          width: 100%;
+          padding: 0.8rem 1rem;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 8px;
+          color: white;
+          font-size: 0.95rem;
+          transition: all 0.3s ease;
+          
+          &:focus {
+            outline: none;
+            border-color: rgba($color-primary, 0.5);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba($color-primary, 0.2);
+          }
+          
+          &::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+          }
+        }
+        
+        textarea {
+          resize: vertical;
+          min-height: 100px;
+        }
+      }
+      
+      .add-goal-btn {
+        width: 100%;
+        
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          transform: none !important;
+          box-shadow: none !important;
+        }
+        
+        .green & {
+          @include button-style(rgba($color-physical, 0.8), white, $color-physical);
+          
+          &:hover {
+            box-shadow: 0 5px 15px rgba($color-physical, 0.3);
+          }
+        }
+        
+        .orange & {
+          @include button-style(rgba($color-occupational, 0.8), white, $color-occupational);
+          
+          &:hover {
+            box-shadow: 0 5px 15px rgba($color-occupational, 0.3);
+          }
+        }
+        
+        .purple & {
+          @include button-style(rgba($color-speech, 0.8), white, $color-speech);
+          
+          &:hover {
+            box-shadow: 0 5px 15px rgba($color-speech, 0.3);
+          }
+        }
+      }
+    }
+  }
+}

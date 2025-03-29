@@ -1,0 +1,200 @@
+// Variables para este componente
+$color-primary: #2c7be5;
+$color-primary-light: #4facfe;
+$color-primary-dark: #1a68d1;
+$color-success: #10b981;
+$color-success-light: #34d399;
+$color-warning: #f59e0b;
+$color-danger: #ef4444;
+$color-danger-light: #f87171;
+$color-dark: #0f172a;
+$color-dark-blue: #071330;
+$color-blue-card: rgba(19, 44, 80, 0.65);
+$color-teal-card: rgba(13, 58, 66, 0.65);
+$color-indigo-card: rgba(19, 38, 90, 0.65);
+
+// Mixins
+@mixin glassmorphism($bg-color: rgba(19, 44, 80, 0.65), $blur: 10px, $border-color: rgba(255, 255, 255, 0.1)) {
+  background: $bg-color;
+  backdrop-filter: blur($blur);
+  -webkit-backdrop-filter: blur($blur);
+  border: 1px solid $border-color;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+@mixin card-hover-effect {
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+  }
+}
+
+@mixin floating-animation {
+  animation: floating 4s ease-in-out infinite;
+  
+  @keyframes floating {
+    0% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+    100% {
+      transform: translateY(0px);
+    }
+  }
+}
+
+@mixin button-style($bg-color, $text-color, $hover-bg-color) {
+  background: $bg-color;
+  color: $text-color;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  
+  &:hover {
+    background: $hover-bg-color;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Keyframes para animaciones
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba($color-primary, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba($color-primary, 0.8);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.medical-section {
+  animation: fadeInUp 0.6s ease-out forwards;
+  padding: 1rem;
+  
+  .section-header {
+    margin-bottom: 2rem;
+    
+    .section-title {
+      color: white;
+      font-size: 1.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin: 0;
+      position: relative;
+      padding-bottom: 0.5rem;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background: linear-gradient(90deg, $color-warning, lighten($color-warning, 10%));
+        border-radius: 3px;
+      }
+      
+      i {
+        color: $color-warning;
+        font-size: 1.6rem;
+      }
+    }
+  }
+
+  .medical-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  
+  // Estado de carga para cualquier componente
+  .loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2rem;
+    
+    .loading-pulse {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba($color-primary, 0.2);
+      box-shadow: 0 0 0 rgba($color-primary, 0.2);
+      animation: pulse 2s infinite;
+      margin-bottom: 1.5rem;
+      
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba($color-primary, 0.6);
+        }
+        70% {
+          box-shadow: 0 0 0 25px rgba($color-primary, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba($color-primary, 0);
+        }
+      }
+    }
+    
+    .loading-message {
+      font-size: 1.1rem;
+      color: rgba(255, 255, 255, 0.8);
+      text-align: center;
+    }
+  }
+  
+  // Responsive styles
+  @media (max-width: 768px) {
+    padding: 0.5rem;
+    
+    .section-header {
+      margin-bottom: 1.5rem;
+      
+      .section-title {
+        font-size: 1.5rem;
+        
+        i {
+          font-size: 1.4rem;
+        }
+      }
+    }
+  }
+}

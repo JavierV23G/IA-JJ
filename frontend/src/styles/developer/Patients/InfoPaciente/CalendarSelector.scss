@@ -1,0 +1,324 @@
+// Variables para el calendario premium
+$color-primary: #2c7be5;
+$color-primary-light: #4facfe;
+$color-primary-dark: #1a68d1;
+$color-success: #10b981;
+$color-orange: #ff8a43;
+$color-orange-light: #ff9f66;
+$color-orange-dark: #e66f28;
+$color-dark-blue: #071330;
+$color-dark-blue-lighter: #0e1e38;
+$color-bg: #0e1e38;
+$color-text: rgba(255, 255, 255, 0.9);
+$color-text-faded: rgba(255, 255, 255, 0.5);
+$background-gradient: linear-gradient(135deg, rgba(9, 25, 47, 0.95), rgba(2, 10, 24, 0.95));
+
+// Mixin para efectos de cristal
+@mixin glassmorphism($bg-color: rgba(12, 25, 44, 0.6), $blur: 10px, $border-color: rgba(255, 255, 255, 0.08)) {
+  background: $bg-color;
+  backdrop-filter: blur($blur);
+  -webkit-backdrop-filter: blur($blur);
+  border: 1px solid $border-color;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+// Mixin para efectos de hover
+@mixin hover-effect($scale: 1.05, $shadow-color: rgba(44, 123, 229, 0.4)) {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  
+  &:hover {
+    transform: translateY(-2px) scale($scale);
+    box-shadow: 0 5px 15px $shadow-color;
+  }
+}
+
+// Mixin para botones
+@mixin button-style($bg-color, $text-color, $hover-bg-color) {
+  background: $bg-color;
+  color: $text-color;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  padding: 0.7rem 1.4rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+  
+  &:hover {
+    background: $hover-bg-color;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Animaciones
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px 2px $color-orange;
+  }
+  50% {
+    box-shadow: 0 0 12px 5px $color-orange-light;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.premium-calendar {
+  @include glassmorphism;
+  width: 100%;
+  max-width: 360px;
+  border-radius: 16px;
+  padding: 1.5rem;
+  color: $color-text;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  animation: scaleIn 0.3s ease-out;
+  position: relative;
+  overflow: hidden;
+  
+  // Efecto de borde brillante
+  &::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(135deg, $color-orange, transparent, $color-primary-light);
+    z-index: -1;
+    border-radius: 18px;
+    opacity: 0.5;
+    animation: rotateBorder 8s linear infinite;
+  }
+  
+  @keyframes rotateBorder {
+    0% {
+      background-position: 0% 0%;
+    }
+    100% {
+      background-position: 400% 400%;
+    }
+  }
+  
+  // Encabezado del calendario
+  .calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.2rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    
+    .month-display {
+      h2 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin: 0;
+        background: linear-gradient(90deg, $color-orange, $color-orange-light);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 2px 10px rgba($color-orange, 0.3);
+      }
+    }
+    
+    .navigation-buttons {
+      display: flex;
+      gap: 0.5rem;
+      
+      .nav-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: $color-text;
+        cursor: pointer;
+        transition: all 0.3s;
+        
+        &:hover {
+          background: rgba($color-orange, 0.2);
+          color: $color-orange-light;
+          transform: translateY(-2px);
+        }
+        
+        &:active {
+          transform: translateY(0);
+        }
+      }
+    }
+  }
+  
+  // Cuadrícula del calendario
+  .calendar-grid {
+    margin-bottom: 1.5rem;
+    
+    // Encabezados de días de la semana
+    .weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      margin-bottom: 0.5rem;
+      
+      .weekday {
+        text-align: center;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: $color-text-faded;
+        padding: 0.5rem 0;
+      }
+    }
+    
+    // Días del calendario
+    .days {
+      .week {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 5px;
+        margin-bottom: 5px;
+        
+        .day-cell {
+          position: relative;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          cursor: pointer;
+          transition: all 0.2s;
+          
+          .day-number {
+            font-size: 1rem;
+            font-weight: 500;
+            z-index: 2;
+          }
+          
+          &.current-month {
+            color: $color-text;
+          }
+          
+          &.other-month {
+            color: rgba(255, 255, 255, 0.3);
+          }
+          
+          &:hover:not(.selected) {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.1);
+          }
+          
+          &.today {
+            font-weight: 700;
+            
+            .today-indicator {
+              position: absolute;
+              bottom: 6px;
+              width: 4px;
+              height: 4px;
+              border-radius: 50%;
+              background: $color-primary-light;
+            }
+          }
+          
+          &.selected {
+            background: $color-orange;
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba($color-orange, 0.6);
+            transform: scale(1.1);
+            
+            &::after {
+              content: '';
+              position: absolute;
+              top: -2px;
+              left: -2px;
+              right: -2px;
+              bottom: -2px;
+              border-radius: 50%;
+              border: 2px solid $color-orange-light;
+              opacity: 0.6;
+              animation: pulse-glow 2s infinite;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  // Acciones del calendario
+  .calendar-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 1.2rem;
+    
+    .action-btn {
+      border-radius: 8px;
+      padding: 0.7rem 1.4rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+      
+      &.cancel {
+        @include button-style(rgba(255, 255, 255, 0.05), $color-text, rgba(255, 255, 255, 0.1));
+      }
+      
+      &.today {
+        @include button-style(rgba($color-orange, 0.8), white, $color-orange);
+        box-shadow: 0 4px 12px rgba($color-orange, 0.3);
+        
+        &:hover {
+          box-shadow: 0 6px 15px rgba($color-orange, 0.5);
+        }
+      }
+    }
+  }
+}
+
+// Estilos responsivos para dispositivos más pequeños
+@media (max-width: 400px) {
+  .premium-calendar {
+    padding: 1rem;
+    
+    .calendar-header {
+      .month-display h2 {
+        font-size: 1.2rem;
+      }
+    }
+    
+    .days .week .day-cell {
+      height: 35px;
+      
+      .day-number {
+        font-size: 0.9rem;
+      }
+    }
+    
+    .calendar-actions .action-btn {
+      padding: 0.6rem 1rem;
+      font-size: 0.9rem;
+    }
+  }
+}
