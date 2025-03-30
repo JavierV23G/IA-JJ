@@ -81,7 +81,7 @@ const TherapistSelector = ({ discipline, onChange }) => {
       case 'PT': return 'Physical Therapist';
       case 'PTA': return 'Physical Therapist Assistant';
       case 'OT': return 'Occupational Therapist';
-      case 'COTA': return 'Certified Occupational Therapy Assistant';
+      case 'COTA': return 'Occupational Therapy Assistant';
       case 'ST': return 'Speech Therapist';
       case 'STA': return 'Speech Therapist Assistant';
       default: return role;

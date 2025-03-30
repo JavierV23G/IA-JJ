@@ -194,7 +194,7 @@ const StaffEditComponent = ({ onBackToOptions }) => {
         email: 'laura.hernandez@therapysync.com',
         phone: '(626) 555-2468',
         role: 'cota',
-        roleDisplay: 'Certified Occupational Therapy Assistant',
+        roleDisplay: 'Occupational Therapy Assistant',
         avatar: null,
         age: 31,
         status: 'active',
@@ -301,7 +301,7 @@ const StaffEditComponent = ({ onBackToOptions }) => {
     { value: 'pt', label: 'PT - Physical Therapist' },
     { value: 'pta', label: 'PTA - Physical Therapist Assistant' },
     { value: 'ot', label: 'OT - Occupational Therapist' },
-    { value: 'cota', label: 'COTA - Certified Occupational Therapy Assistant' },
+    { value: 'cota', label: 'COTA - Occupational Therapy Assistant' },
     { value: 'st', label: 'ST - Speech Therapist' },
     { value: 'sta', label: 'STA - Speech Therapy Assistant' },
   ];
@@ -505,7 +505,7 @@ const StaffEditComponent = ({ onBackToOptions }) => {
             <i className="fas fa-search"></i>
             <input 
               type="text" 
-              placeholder="Buscar por nombre, email o especialidad..." 
+              placeholder="Buscar por nombre..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />

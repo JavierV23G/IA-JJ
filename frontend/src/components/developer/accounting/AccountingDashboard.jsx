@@ -747,7 +747,7 @@ const AccountingDashboard = ({ stats, selectedPeriod }) => {
                     break;
                   case 'COTA':
                     icon = 'fa-hands';
-                    title = 'Certified OT Assistant';
+                    title = 'OT Assistant';
                     break;
                   case 'ST':
                     icon = 'fa-comment-medical';

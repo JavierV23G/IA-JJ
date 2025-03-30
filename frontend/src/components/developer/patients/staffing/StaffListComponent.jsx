@@ -193,7 +193,7 @@ const StaffListComponent = ({ onBackToOptions }) => {
         email: 'laura.hernandez@therapysync.com',
         phone: '(626) 555-2468',
         role: 'cota',
-        roleDisplay: 'Certified Occupational Therapy Assistant',
+        roleDisplay: ' Occupational Therapy Assistant',
         avatar: null,
         age: 31,
         status: 'active',
