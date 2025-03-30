@@ -14,7 +14,7 @@ const StaffProfileModal = ({ staff, onClose, onEdit, onSave, onLoginAs, editMode
     'pt': 'PT - Physical Therapist',
     'pta': 'PTA - Physical Therapist Assistant',
     'ot': 'OT - Occupational Therapist',
-    'cota': 'COTA - Certified Occupational Therapy Assistant',
+    'cota': 'COTA -  Occupational Therapy Assistant',
     'st': 'ST - Speech Therapist',
     'sta': 'STA - Speech Therapy Assistant',
   };

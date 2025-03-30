@@ -420,13 +420,13 @@
         }
         
         input {
+          
           width: 100%;
           padding: $spacing-3 $spacing-3 $spacing-3 $spacing-8;
           border: 1px solid $light-gray;
           border-radius: $border-radius-md;
           font-size: $font-sm;
           background: $white;
-          color: $dark-gray;
           transition: $transition-quick;
           
           &:focus {
@@ -1193,7 +1193,6 @@
 
 .staff-filters .search-input input,
 .staff-filters select {
-  background: white !important;
   color: black !important;
   border: 1px solid #BBBBBB !important;
 }
@@ -1410,18 +1409,17 @@
   box-shadow: 0 0 0 2px white;
 }
 
-/* VARIANTE: Para colores sólidos en lugar de gradientes */
-/*
-.avatar-placeholder {
-  background-color: #0074d9;
-}
+//  VARIANTE: Para colores sólidos en lugar de gradientes 
 
-.staff-card:nth-child(1) .avatar-placeholder { background-color: #0074d9; }
-.staff-card:nth-child(2) .avatar-placeholder { background-color: #2ecc40; }
-.staff-card:nth-child(3) .avatar-placeholder { background-color: #ff851b; }
-.staff-card:nth-child(4) .avatar-placeholder { background-color: #6c5ce7; }
-.staff-card:nth-child(5) .avatar-placeholder { background-color: #e84393; }
-.staff-card:nth-child(6) .avatar-placeholder { background-color: #00a8ff; }
-.staff-card:nth-child(7) .avatar-placeholder { background-color: #f368e0; }
-.staff-card:nth-child(8) .avatar-placeholder { background-color: #ff9f43; }
-*/
+// .avatar-placeholder {
+//   background-color: #0074d9;
+// }
+
+// .staff-card:nth-child(1) .avatar-placeholder { background-color: #0074d9; }
+// .staff-card:nth-child(2) .avatar-placeholder { background-color: #2ecc40; }
+// .staff-card:nth-child(3) .avatar-placeholder { background-color: #ff851b; }
+// .staff-card:nth-child(4) .avatar-placeholder { background-color: #6c5ce7; }
+// .staff-card:nth-child(5) .avatar-placeholder { background-color: #e84393; }
+// .staff-card:nth-child(6) .avatar-placeholder { background-color: #00a8ff; }
+// .staff-card:nth-child(7) .avatar-placeholder { background-color: #f368e0; }
+// .staff-card:nth-child(8) .avatar-placeholder { background-color: #ff9f43; }
