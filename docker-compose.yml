@@ -6,11 +6,11 @@ services:
     build: ./frontend
     ports:
       - "3000:3000"
-    networks:
-      - app-network
     volumes:
       - ./frontend:/app
       - /app/node_modules
+    depends_on:
+      - backend-service
 
   backend-service:
     container_name: backend-container
@@ -18,31 +18,41 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://admin:adminpassword@database-service:5432/IA_JJ
+      - DATABASE_URL=${DATABASE_URL}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
-      - ./backend:/app
-    networks:
-      - app-network
+      - .:/app
     depends_on:
-      - database-service
+      db:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
-  database-service:
+  db:
     container_name: database-container
-    image: postgres:latest
+    image: postgres:16
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
-    environment:
-      - POSTGRES_DB=IA_JJ
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=adminpassword
-    networks:
-      - app-network
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
 
-networks:
-  app-network:
-    driver: bridge
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
-  db-data:
+  postgres_data:
+    name: IA_JJ_postgres-data
+
+networks:
+  default:
+    name: IA_JJ_default
