@@ -48,22 +48,6 @@ const SupportHeader = ({
       subtitle: 'Resources Library', 
       badge: { count: 3, type: 'info', text: 'NEW' },
       description: 'Access and create help articles, tutorials, and documentation for customers.'
-    },
-    { 
-      id: 'chat', 
-      name: 'Live Chat', 
-      icon: 'fa-comments-alt', 
-      subtitle: 'Real-time Support', 
-      badge: { count: 1, type: 'success', text: 'ACTIVE' },
-      description: 'Engage directly with customers through real-time messaging and video calls.'
-    },
-    { 
-      id: 'email', 
-      name: 'Corporate Email', 
-      icon: 'fa-envelope', 
-      subtitle: 'Communications Hub', 
-      badge: null,
-      description: 'Access your corporate email for internal communications and ticket notifications.'
     }
   ];
   

@@ -493,6 +493,7 @@ const StaffListComponent = ({ onBackToOptions }) => {
               <option value="cota">Occupational Therapy Assistant</option>
               <option value="st">Speech Therapist</option>
               <option value="sta">Speech Therapy Assistant</option>
+              <option value="agency">Agency</option>
               <option value="administrator">Administrator</option>
             </select>
           </div>

@@ -3,8 +3,6 @@ import '../../../styles/developer/support/Support.scss';
 import SupportHeader from './SupportHeader.jsx';
 import SupportTickets from './SupportTickets.jsx';
 import SupportKnowledgeBase from './SupportKnowledgeBase.jsx';
-import SupportChat from './SupportChat.jsx';
-import SupportCorporateEmail from './SupportCorporateEmail.jsx';
 import SupportDashboard from './SupportDashboard.jsx';
 // Importar logo correctamente para asegurar que se muestre
 import logoImg from '../../../assets/LogoMHC.jpeg';
@@ -68,10 +66,6 @@ const SupportPage = () => {
         return <SupportTickets />;
       case 'knowledge':
         return <SupportKnowledgeBase />;
-      case 'chat':
-        return <SupportChat />;
-      case 'email':
-        return <SupportCorporateEmail />;
       default:
         return <SupportDashboard />;
     }

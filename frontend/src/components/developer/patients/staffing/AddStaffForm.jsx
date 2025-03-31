@@ -93,7 +93,9 @@ const AddStaffForm = ({ onCancel }) => {
   };
 
   const roles = [
-    { value: 'Developer', label: 'Developer' },
+    { value: 'agency', label: 'Agency' },
+    { value: 'support', label: 'Support' },
+    { value: 'developer', label: 'Developer' },
     { value: 'administrator', label: 'Administrador' },
     { value: 'pt', label: 'PT - Physical Therapist' },
     { value: 'pta', label: 'PTA - Physical Therapist Assistant' },

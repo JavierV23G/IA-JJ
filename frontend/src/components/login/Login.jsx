@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthLoadingModal from './AuthLoadingModal';
 import logoImg from '../../assets/LogoMHC.jpeg';
+import { useAuth } from './AuthContext';
 
 const Login = ({ onForgotPassword }) => {
   const navigate = useNavigate();
+  const { login } = useAuth(); // Usar el contexto de autenticación
+  
   const [formData, setFormData] = useState({
     username: '',
     password: ''
@@ -23,10 +26,41 @@ const Login = ({ onForgotPassword }) => {
     message: ''
   });
 
-  // Lista de credenciales válidas (después se moverían al backend)
+  // Lista de credenciales válidas con datos completos (solo en el código, no en la UI)
   const validCredentials = [
-    { username: "JLuis09", password: "Kariokito12" },
-    { username: "Javi1", password: "JavierVargas12" }
+    { 
+      username: "JLuis09", 
+      password: "Kariokito12",
+      fullname: "Luis Nava",
+      email: "jluis@example.com",
+      role: "Developer",
+      contact_number: "555-123-4567",
+      documents: "ID-12345",
+      zip_code: "90210",
+      birth_date: "1990-05-15"
+    },
+    { 
+      username: "Javi1", 
+      password: "JavierVargas12",
+      fullname: "Javier Vargas",
+      email: "javier@example.com",
+      role: "Administrator",
+      contact_number: "555-987-6543",
+      documents: "ID-54321",
+      zip_code: "90211",
+      birth_date: "1985-10-20"
+    },
+    { 
+      username: "AlexM1", 
+      password: "AlexMar09",
+      fullname: "Alex Martinez",
+      email: "Alex@example.com",
+      role: "PT - Administrator",
+      contact_number: "555-987-6543",
+      documents: "ID-54321",
+      zip_code: "90211",
+      birth_date: "1985-10-20"
+    }
   ];
 
   // Comprobar el localStorage al cargar
@@ -118,13 +152,13 @@ const Login = ({ onForgotPassword }) => {
       return;
     }
     
-    // Verificar credenciales rápidamente primero
-    const isValid = validCredentials.some(
+    // Verificar credenciales
+    const user = validCredentials.find(
       cred => cred.username === formData.username && cred.password === formData.password
     );
     
-    // Si las credenciales no son válidas, mostrar error inmediatamente sin abrir el modal
-    if (!isValid) {
+    // Si las credenciales no son válidas, mostrar error
+    if (!user) {
       showError('username', "Invalid username or password");
       showError('password', "Invalid username or password");
       
@@ -155,6 +189,26 @@ const Login = ({ onForgotPassword }) => {
     
     // Simulación del proceso de autenticación exitoso
     setTimeout(() => {
+      // Construir un objeto de usuario con todos los datos del usuario
+      const userData = {
+        id: Math.floor(Math.random() * 1000) + 1, // ID simulado
+        username: user.username,
+        fullname: user.fullname,
+        email: user.email,
+        role: user.role,
+        contact_number: user.contact_number,
+        documents: user.documents,
+        zip_code: user.zip_code,
+        birth_date: user.birth_date
+      };
+      
+      // Guardar datos en el contexto de autenticación
+      login({
+        success: true,
+        token: "simulated_token_" + Date.now(),
+        user: userData
+      });
+      
       // Actualizar modal a éxito
       setAuthModal({
         isOpen: true,
@@ -170,7 +224,7 @@ const Login = ({ onForgotPassword }) => {
       setTimeout(() => {
         navigate('/homePage');
       }, 2000);
-    }, 4500);
+    }, 2500);
   };
 
   return (

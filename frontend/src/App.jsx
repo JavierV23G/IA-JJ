@@ -1,5 +1,7 @@
 import React from 'react';
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './components/login/AuthContext';
+import ProtectedRoute from './components/login/ProtectedRoute';
 import LoginCard from './components/login/LoginCard';
 import HomePage from './components/developer/welcome/Welcome';
 import SupportPage from './components/developer/support/SupportPage';
@@ -14,20 +16,30 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 
 function App() {
   return (
-    <HashRouter>
-      <Routes>
-        <Route path="/" element={<LoginCard />} />
-        <Route path="/homePage" element={<HomePage />} />
-        <Route path="/support" element={<SupportPage />} />
-        <Route path="/referrals" element={<ReferralsPage />} />
-        <Route path="/createNewReferral" element={<CreateNF />} />
-        <Route path="/patients" element={<PatientsPage />} />
-        <Route path="/paciente/:patientId" element={<InfoPaciente />} />
-        <Route path="/staffing" element={<StaffingPage />} />
-        <Route path="/accounting" element={<Accounting />} />
-        <Route path="/profile" element={<UserProfile />} />
-      </Routes>
-    </HashRouter>
+    <AuthProvider>
+      <HashRouter>
+        <Routes>
+          {/* Ruta pública - Login */}
+          <Route path="/" element={<LoginCard />} />
+          
+          {/* Rutas protegidas */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/homePage" element={<HomePage />} />
+            <Route path="/support" element={<SupportPage />} />
+            <Route path="/referrals" element={<ReferralsPage />} />
+            <Route path="/createNewReferral" element={<CreateNF />} />
+            <Route path="/patients" element={<PatientsPage />} />
+            <Route path="/paciente/:patientId" element={<InfoPaciente />} />
+            <Route path="/staffing" element={<StaffingPage />} />
+            <Route path="/accounting" element={<Accounting />} />
+            <Route path="/profile" element={<UserProfile />} />
+          </Route>
+          
+          {/* Ruta por defecto - Redirige al login */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </HashRouter>
+    </AuthProvider>
   );
 }
 
