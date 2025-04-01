@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../../../../../styles/developer/Patients/InfoPaciente/TherapistCard.scss';
 
-const TherapistCard = ({ therapist, isEditing, role }) => {
+const DevTherapistCard = ({ therapist, isEditing, role }) => {
   const [therapistList, setTherapistList] = useState([]);
   const [selectedTherapist, setSelectedTherapist] = useState(therapist);
   const [isLoading, setIsLoading] = useState(false);
@@ -129,4 +129,4 @@ const TherapistCard = ({ therapist, isEditing, role }) => {
   );
 };
 
-export default TherapistCard;
+export default DevTherapistCard;

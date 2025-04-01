@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import '../../../styles/developer/accounting/Accounting.scss';
 import logoImg from '../../../assets/LogoMHC.jpeg';
 import { motion, AnimatePresence } from 'framer-motion';
-import AccountingDashboard from './AccountingDashboard.jsx';
-import PaymentPeriodSelector from './PaymentPeriodSelector.jsx';
-import TherapistFinancialList from './TherapistFinancialList.jsx';
-import TherapistPaymentModal from './TherapistPaymentModal.jsx';
+import DevAccountingDashboard from './AccountingDashboard.jsx';
+import DevPaymentPeriodSelector from './PaymentPeriodSelector.jsx';
+import DevTherapistFinancialList from './TherapistFinancialList.jsx';
+import DevTherapistPaymentModal from './TherapistPaymentModal.jsx';
 
 // Componente para las partículas animadas de fondo
 const ParticlesBackground = () => {
@@ -109,7 +109,7 @@ const ParticlesBackground = () => {
   );
 };
 
-const Accounting = () => {
+const DevAccounting = () => {
   const navigate = useNavigate();
   
   // Estados para gestionar la interfaz y los datos
@@ -645,11 +645,10 @@ const Accounting = () => {
             
             <div className="accounting-body">
               {/* Dashboard de métricas mejorado */}
-              <AccountingDashboard 
+              <DevAccountingDashboard 
                 stats={dashboardStats} 
                 selectedPeriod={selectedPeriod}
               />
-              
               {/* Selector de períodos de pago mejorado */}
               <motion.div 
                 className="period-section"
@@ -661,7 +660,7 @@ const Accounting = () => {
                   <i className="fas fa-calendar-check"></i>
                   Payment Periods
                 </h2>
-                <PaymentPeriodSelector 
+                <DevPaymentPeriodSelector 
                   periods={paymentPeriods}
                   selectedPeriod={selectedPeriod}
                   onPeriodChange={handlePeriodChange}
@@ -679,7 +678,7 @@ const Accounting = () => {
                   <i className="fas fa-user-md"></i>
                   Therapist Earnings
                 </h2>
-                <TherapistFinancialList 
+                <DevTherapistFinancialList 
                   therapists={therapists}
                   onTherapistClick={handleTherapistClick}
                   selectedPeriod={selectedPeriod}
@@ -819,7 +818,7 @@ const Accounting = () => {
       {/* Modal de detalles del terapeuta mejorado */}
       <AnimatePresence>
         {showTherapistModal && selectedTherapist && (
-          <TherapistPaymentModal 
+          <DevTherapistPaymentModal 
             therapist={selectedTherapist}
             period={selectedPeriod}
             onClose={() => setShowTherapistModal(false)}
@@ -858,4 +857,4 @@ const Accounting = () => {
   );
 };
 
-export default Accounting;
+export default DevAccounting;

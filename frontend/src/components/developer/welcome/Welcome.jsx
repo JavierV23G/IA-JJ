@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../../styles/developer/Welcome/Welcome.scss';
-import LogoutAnimation from './LogoutAnimation';
+import LogoutAnimation from '../../LogOut/LogOut'; // Importación del componente reutilizable
 import InfoWelcome from './infoWelcome';
 import { useAuth } from '../../login/AuthContext';
-import Header from '../../header/Header'; // Importar el nuevo componente Header
+import Header from '../../header/Header';
 
-const HomePage = () => {
+const DevHomePage = () => {
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  const { currentUser, logout } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showAIAssistant, setShowAIAssistant] = useState(false);
   const [parallaxPosition, setParallaxPosition] = useState({ x: 0, y: 0 });
@@ -96,6 +96,29 @@ const HomePage = () => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [isMobile, isTablet]);
 
+  // Handle logout with animation
+  const handleLogout = () => {
+    // Mostrar la animación de cierre de sesión
+    setIsLoggingOut(true);
+    
+    // Ocultar el asistente AI durante el cierre de sesión
+    setShowAIAssistant(false);
+    
+    // Agregar clases de cierre de sesión a todo el documento
+    document.body.classList.add('logging-out');
+    
+    // No necesitamos más código aquí, ya que LogoutAnimation manejará la animación
+    // y llamará al callback cuando termine
+  };
+  
+  // Callback para cuando la animación de cierre de sesión se complete
+  const handleLogoutAnimationComplete = () => {
+    // Ejecutar el cierre de sesión real
+    logout();
+    // Redireccionar a la página de inicio de sesión
+    navigate('/');
+  };
+
   return (
     <div 
       className={`dashboard ${welcomeAnimComplete ? 'anim-complete' : ''} ${isMobile ? 'mobile' : ''} ${isTablet ? 'tablet' : ''}`}
@@ -131,11 +154,16 @@ const HomePage = () => {
         </div>
       </div>
       
-      {/* Logout animation component */}
-      {isLoggingOut && <LogoutAnimation isMobile={isMobile} />}
+      {/* Usando el componente LogoutAnimation reutilizable con callback */}
+      {isLoggingOut && (
+        <LogoutAnimation 
+          isMobile={isMobile} 
+          onAnimationComplete={handleLogoutAnimationComplete}
+        />
+      )}
       
-      {/* Nuevo componente Header reutilizable */}
-      <Header />
+      {/* Componente Header reutilizable con función de logout */}
+      <Header onLogout={handleLogout} />
       
       {/* Enhanced main content with responsive layout */}
       <main className="main-content">
@@ -161,4 +189,4 @@ const HomePage = () => {
   );
 };
 
-export default HomePage;
+export default DevHomePage;

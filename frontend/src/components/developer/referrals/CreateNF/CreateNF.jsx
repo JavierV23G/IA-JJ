@@ -9,7 +9,7 @@ import LoadingScreen from './LoadingDates';
 import '../../../../styles/developer/Referrals/CreateNF/LoadingDates.scss';
 import DOBDatePicker from './DOBDatePicker';
 
-const CreateNF = () => {
+const DevCreateNF = () => {
   const notificationCount = 0; // Define the notificationCount variable
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -1371,4 +1371,4 @@ const CreateNF = () => {
   );
 };
 
-export default CreateNF;
+export default DevCreateNF;

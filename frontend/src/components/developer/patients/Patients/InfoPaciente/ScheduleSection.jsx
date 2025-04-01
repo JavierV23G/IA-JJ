@@ -5,7 +5,7 @@ import VisitTypeSelector from './VisitTypeSelector';
 import FrequencySelector from './FrequencySelector';
 import TherapistSelector from './TherapistSelector';
 
-const ScheduleSection = ({ patientId }) => {
+const DevScheduleSection = ({ patientId }) => {
   // Estados para gestionar el calendario y visitas
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
@@ -853,4 +853,4 @@ const ScheduleSection = ({ patientId }) => {
   );
 };
 
-export default ScheduleSection;
+export default DevScheduleSection;

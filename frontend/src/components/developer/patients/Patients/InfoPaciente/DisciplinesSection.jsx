@@ -5,7 +5,7 @@ import SpeechTherapy from './SpeechTherapy.jsx';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import '../../../../../styles/developer/Patients/InfoPaciente/DisciplinesSection.scss';
 
-const DisciplinesSection = ({ patientId }) => {
+const DevDisciplinesSection = ({ patientId }) => {
   const [activeSection, setActiveSection] = useState('physical');
   const [isLoading, setIsLoading] = useState(true);
   const [showLoadingSpinner, setShowLoadingSpinner] = useState(true);
@@ -434,4 +434,4 @@ const DisciplinesSection = ({ patientId }) => {
   );
 };
 
-export default DisciplinesSection;
+export default DevDisciplinesSection;

@@ -1,7 +1,7 @@
   import React, { useState } from 'react';
 import '../../../../styles/developer/Patients/Staffing/AddStaffForm.scss';
 
-const AddStaffForm = ({ onCancel }) => {
+const DevAddStaffForm = ({ onCancel }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -407,4 +407,4 @@ const AddStaffForm = ({ onCancel }) => {
   );
 };
 
-export default AddStaffForm;
+export default DevAddStaffForm;

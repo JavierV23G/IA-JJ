@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
-const CalendarSelector = ({ initialDate, onDateSelect, onClose }) => {
+const DevCalendarSelector = ({ initialDate, onDateSelect, onClose }) => {
   // Fecha actual para referencia
   const today = new Date();
   
@@ -225,4 +225,4 @@ const CalendarSelector = ({ initialDate, onDateSelect, onClose }) => {
   );
 };
 
-export default CalendarSelector;
+export default DevCalendarSelector;

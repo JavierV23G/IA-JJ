@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../../../../../styles/developer/Patients/InfoPaciente/CertPeriodDropdown.scss'; // Asegúrate de crear este archivo SCSS
 
-const CertPeriodDropdown = ({ certPeriods, activePeriod, onPeriodSelect, onAddNew }) => {
+const DevCertPeriodDropdown = ({ certPeriods, activePeriod, onPeriodSelect, onAddNew }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -72,4 +72,4 @@ const CertPeriodDropdown = ({ certPeriods, activePeriod, onPeriodSelect, onAddNe
   );
 };
 
-export default CertPeriodDropdown;
+export default DevCertPeriodDropdown;

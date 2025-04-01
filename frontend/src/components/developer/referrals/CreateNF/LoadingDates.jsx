@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../../../../styles/developer/Referrals/CreateNF/LoadingDates.scss';
 
-const LoadingScreen = ({ isLoading, onComplete }) => {
+const DevLoadingScreen = ({ isLoading, onComplete }) => {
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
   
@@ -119,4 +119,4 @@ const LoadingScreen = ({ isLoading, onComplete }) => {
   );
 };
 
-export default LoadingScreen;
+export default DevLoadingScreen;

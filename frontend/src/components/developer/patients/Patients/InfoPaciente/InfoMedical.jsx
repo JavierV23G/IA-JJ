@@ -3,7 +3,7 @@ import MedicalInfo from './MedicalInfo';
 import DocumentSection from './DocumentSection';
 import '../../../../../styles/developer/Patients/InfoPaciente/InfoMedical.scss';
 
-const InfoMedical = ({ patientData }) => {
+const DevInfoMedical = ({ patientData }) => {
   const [expandedSection, setExpandedSection] = useState('all');
   const [loading, setLoading] = useState(false);
   
@@ -172,4 +172,4 @@ const InfoMedical = ({ patientData }) => {
   );
 };
 
-export default InfoMedical;
+export default DevInfoMedical;

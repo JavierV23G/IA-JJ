@@ -4,7 +4,7 @@ import GoalsPanel from './GoalsPanel';
 import FrequencySelector from './FrequencySelector';
 import '../../../../../styles/developer/Patients/InfoPaciente/DisciplineTherapy.scss';
 
-const OccupationalTherapy = ({ therapists, patientId }) => {
+const DevOccupationalTherapy = ({ therapists, patientId }) => {
   const [showGoals, setShowGoals] = useState(false);
   const [currentFrequency, setCurrentFrequency] = useState("NO FREQUENCY SET");
   const [isEditing, setIsEditing] = useState(false);
@@ -155,4 +155,4 @@ const OccupationalTherapy = ({ therapists, patientId }) => {
   );
 };
 
-export default OccupationalTherapy;
+export default DevOccupationalTherapy;

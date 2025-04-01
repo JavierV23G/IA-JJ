@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import '../../../../../styles/developer/Patients/InfoPaciente/DocumentSection.scss';
 
-const DocumentSection = ({ 
+const DevDocumentSection = ({ 
   documents, 
   onAddDocument, 
   onDeleteDocument, 
@@ -997,4 +997,4 @@ const DocumentSection = ({
   );
 };
 
-export default DocumentSection;
+export default DevDocumentSection;

@@ -7,7 +7,7 @@ import SupportDashboard from './SupportDashboard.jsx';
 // Importar logo correctamente para asegurar que se muestre
 import logoImg from '../../../assets/LogoMHC.jpeg';
 
-const SupportPage = () => {
+const DevSupportPage = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [isLoading, setIsLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
@@ -177,4 +177,4 @@ const SupportPage = () => {
   );
 };
 
-export default SupportPage;
+export default DevSupportPage;

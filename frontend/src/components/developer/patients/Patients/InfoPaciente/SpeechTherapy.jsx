@@ -4,7 +4,7 @@ import GoalsPanel from './GoalsPanel';
 import FrequencySelector from './FrequencySelector';
 import '../../../../../styles/developer/Patients/InfoPaciente/DisciplineTherapy.scss';
 
-const SpeechTherapy = ({ therapists, patientId }) => {
+const DevSpeechTherapy = ({ therapists, patientId }) => {
   const [showGoals, setShowGoals] = useState(false);
   const [currentFrequency, setCurrentFrequency] = useState("1W2");
   const [isEditing, setIsEditing] = useState(false);
@@ -155,4 +155,4 @@ const SpeechTherapy = ({ therapists, patientId }) => {
   );
 };
 
-export default SpeechTherapy;
+export default DevSpeechTherapy;

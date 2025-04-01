@@ -1,7 +1,7 @@
   import React, { useState, useEffect, useRef } from 'react';
 import '../../../../../styles/developer/Patients/InfoPaciente/TherapistSelector.scss';
 
-const TherapistSelector = ({ discipline, onChange }) => {
+const DevTherapistSelector = ({ discipline, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [therapists, setTherapists] = useState([]);
   const [selectedTherapist, setSelectedTherapist] = useState(null);
@@ -160,4 +160,4 @@ const TherapistSelector = ({ discipline, onChange }) => {
   );
 };
 
-export default TherapistSelector;
+export default DevTherapistSelector;

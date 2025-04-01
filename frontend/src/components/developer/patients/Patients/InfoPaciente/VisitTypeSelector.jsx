@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../../../../../styles/developer/Patients/InfoPaciente/VisitTypeSelector.scss';
 
-const VisitTypeSelector = ({ discipline, onChange }) => {
+const DevVisitTypeSelector = ({ discipline, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedType, setSelectedType] = useState('Standard');
   const dropdownRef = useRef(null);
@@ -144,4 +144,4 @@ const VisitTypeSelector = ({ discipline, onChange }) => {
   );
 };
 
-export default VisitTypeSelector;
+export default DevVisitTypeSelector;

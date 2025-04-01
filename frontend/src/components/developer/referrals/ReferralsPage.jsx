@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import '../../../styles/developer/Referrals/ReferralsPage.scss';
 import logoImg from '../../../assets/LogoMHC.jpeg';
 
-const ReferralsPage = () => {
+const DevReferralsPage = () => {
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [activeMenuIndex, setActiveMenuIndex] = useState(1); // Por defecto en "Create New Referral"
@@ -414,4 +414,4 @@ const ReferralsPage = () => {
   );
 };
 
-export default ReferralsPage;
+export default DevReferralsPage;

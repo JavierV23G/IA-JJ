@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import '../../../../../styles/developer/Patients/InfoPaciente/MedicalInfo.scss';
 
-const MedicalInfo = ({ data, onUpdate, expanded, onToggleExpand, isLoading }) => {
+const DevMedicalInfo = ({ data, onUpdate, expanded, onToggleExpand, isLoading }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({...data});
   const [formErrors, setFormErrors] = useState({});
@@ -365,4 +365,4 @@ const MedicalInfo = ({ data, onUpdate, expanded, onToggleExpand, isLoading }) =>
   );
 };
 
-export default MedicalInfo;
+export default DevMedicalInfo;

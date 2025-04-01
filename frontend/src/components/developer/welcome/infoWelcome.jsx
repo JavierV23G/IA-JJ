@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../../../styles/developer/Welcome/InfoWelcome.scss';
 
-const InfoWelcome = ({ isMobile, isTablet }) => {
+const DevInfoWelcome = ({ isMobile, isTablet }) => {
   // Enhanced state for animations with performance optimizations
   const [animatedStats, setAnimatedStats] = useState({
     activePatients: 0
@@ -390,4 +390,4 @@ const InfoWelcome = ({ isMobile, isTablet }) => {
   );
 };
 
-export default InfoWelcome;
+export default DevInfoWelcome;

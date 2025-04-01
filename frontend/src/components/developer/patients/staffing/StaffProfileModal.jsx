@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../../../../styles/developer/Patients/Staffing/StaffProfileModal.scss';
 
-const StaffProfileModal = ({ staff, onClose, onEdit, onSave, onLoginAs, editMode }) => {
+const DevStaffProfileModal = ({ staff, onClose, onEdit, onSave, onLoginAs, editMode }) => {
   const [editedStaff, setEditedStaff] = useState({ ...staff });
   const [activeTab, setActiveTab] = useState('info');
   const [saveLoading, setSaveLoading] = useState(false);
@@ -535,4 +535,4 @@ const StaffProfileModal = ({ staff, onClose, onEdit, onSave, onLoginAs, editMode
   );
 };
 
-export default StaffProfileModal;
+export default DevStaffProfileModal;

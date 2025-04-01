@@ -3,7 +3,7 @@ import AddStaffForm from './AddStaffForm';
 import StaffListComponent from './StaffListComponent';
 import StaffEditComponent from './StaffEditComponent';
 
-const StaffingManagerContainer = () => {
+const DevStaffingManagerContainer = () => {
   const [showAddStaffForm, setShowAddStaffForm] = useState(false);
   const [showStaffList, setShowStaffList] = useState(false);
   const [showStaffEdit, setShowStaffEdit] = useState(false);
@@ -97,4 +97,4 @@ const StaffingManagerContainer = () => {
   );
 };
 
-export default StaffingManagerContainer;
+export default DevStaffingManagerContainer;

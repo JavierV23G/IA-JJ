@@ -30,7 +30,7 @@ ChartJS.register(
   Filler
 );
 
-const SupportDashboard = () => {
+const DevSupportDashboard = () => {
   // Referencias para animaciones
   const canvasRef = useRef(null);
   const particlesRef = useRef([]);
@@ -1157,4 +1157,4 @@ const SupportDashboard = () => {
   );
 };
 
-export default SupportDashboard;
+export default DevSupportDashboard;

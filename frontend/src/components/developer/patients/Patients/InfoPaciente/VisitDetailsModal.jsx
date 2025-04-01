@@ -3,7 +3,7 @@ import '../../../../../styles/developer/Patients/InfoPaciente/VisitDetailsModal.
 import TherapistSelector from './TherapistSelector';
 import VisitTypeSelector from './VisitTypeSelector';
 
-const VisitDetailsModal = ({ visit, onClose, onSave, onDelete }) => {
+const DevVisitDetailsModal = ({ visit, onClose, onSave, onDelete }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     type: visit?.type || 'Standard',
@@ -303,4 +303,4 @@ const VisitDetailsModal = ({ visit, onClose, onSave, onDelete }) => {
   );
 };
 
-export default VisitDetailsModal;
+export default DevVisitDetailsModal;

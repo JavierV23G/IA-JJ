@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import '../../../styles/developer/support/SupportHeader.scss';
 import logoImg from '../../../assets/LogoMHC.jpeg';
 
-const SupportHeader = ({ 
+const DevSupportHeader = ({ 
   activeSection, 
   onSectionChange, 
   searchQuery, 
@@ -819,4 +819,4 @@ const SupportHeader = ({
   );
 };
 
-export default SupportHeader;
+export default DevSupportHeader;

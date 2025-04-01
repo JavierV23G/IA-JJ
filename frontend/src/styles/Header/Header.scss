@@ -1217,3 +1217,133 @@ body.logging-out {
     transition: all 1s ease;
   }
 }
+
+/* Agregar estos estilos a tu archivo Header.scss existente */
+
+.main-header {
+  /* Estilos existentes */
+  
+  .header-container {
+    /* Estilos existentes */
+    
+    /* Navegación entre menús - Nuevo para Referrals Page */
+    .logo-container {
+      display: flex;
+      align-items: center;
+      
+      .menu-navigation {
+        display: flex;
+        gap: 1rem;
+        margin-left: 1.5rem;
+        
+        .nav-button {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 8px;
+          color: rgba(255, 255, 255, 0.7);
+          padding: 0.5rem 1rem;
+          display: flex;
+          align-items: center;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          
+          i {
+            margin-right: 0.5rem;
+            font-size: 0.9rem;
+          }
+          
+          span {
+            font-size: 0.9rem;
+            font-weight: 500;
+          }
+          
+          &:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+          }
+          
+          &.active {
+            background: linear-gradient(135deg, rgba(0, 229, 255, 0.15), rgba(0, 140, 255, 0.15));
+            color: #00e5ff;
+            position: relative;
+            
+            &:after {
+              content: '';
+              position: absolute;
+              bottom: -4px;
+              left: 10%;
+              width: 80%;
+              height: 3px;
+              background: linear-gradient(to right, #00e5ff, #2979ff);
+              border-radius: 3px;
+              box-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+            }
+          }
+        }
+      }
+    }
+    
+    /* Carrusel modificado para accommodar las opciones de Referrals */
+    .top-carousel {
+      .carousel-options {
+        .carousel-option {
+          &.center {
+            .option-content {
+              .option-icon {
+                animation: iconFadeIn 0.5s ease forwards;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/* Animaciones adicionales */
+@keyframes iconFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Media queries para responsividad */
+@media (max-width: 992px) {
+  .main-header .header-container {
+    .logo-container {
+      flex-direction: row;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      
+      .menu-navigation {
+        margin-left: 1rem;
+        
+        .nav-button {
+          padding: 0.4rem 0.8rem;
+          
+          span {
+            font-size: 0.8rem;
+          }
+          
+          @media (max-width: 576px) {
+            span {
+              display: none;
+            }
+            
+            i {
+              margin-right: 0;
+            }
+          }
+        }
+      }
+    }
+  }
+}

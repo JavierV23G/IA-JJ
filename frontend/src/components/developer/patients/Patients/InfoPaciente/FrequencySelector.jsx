@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../../../../../styles/developer/Patients/InfoPaciente/FrequencySelector.scss';
 
-const FrequencySelector = ({ currentValue, onChange, therapyType }) => {
+const DevFrequencySelector = ({ currentValue, onChange, therapyType }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [customInput, setCustomInput] = useState('');
   const [isCustomActive, setIsCustomActive] = useState(false);
@@ -352,4 +352,4 @@ const FrequencySelector = ({ currentValue, onChange, therapyType }) => {
   );
 };
 
-export default FrequencySelector;
+export default DevFrequencySelector;

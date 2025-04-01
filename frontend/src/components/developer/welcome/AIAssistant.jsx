@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../../../styles/developer/Welcome/AIAssistant.scss';
 
-const AIAssistant = () => {
+const DevAIAssistant = () => {
   // Estados para controlar el comportamiento del asistente
   const [isExpanded, setIsExpanded] = useState(false);
   const [query, setQuery] = useState('');
@@ -331,4 +331,4 @@ const AIAssistant = () => {
   );
 };
 
-export default AIAssistant;
+export default DevAIAssistant;

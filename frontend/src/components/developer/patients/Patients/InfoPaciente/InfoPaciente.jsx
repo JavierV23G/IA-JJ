@@ -9,7 +9,7 @@ import ScheduleSection from './ScheduleSection';
 import CommentsSection from './CommentsSection';
 import '../../../../../styles/developer/Patients/InfoPaciente/InfoPaciente.scss';
 
-const InfoPaciente = () => {
+const DevInfoPaciente = () => {
   const navigate = useNavigate();
   const { patientId } = useParams();
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -568,4 +568,4 @@ const InfoPaciente = () => {
   );
 };
 
-export default InfoPaciente;
+export default DevInfoPaciente;

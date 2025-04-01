@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import '../../../styles/developer/accounting/PaymentPeriodSelector.scss';
 
-const PaymentPeriodSelector = ({ periods, selectedPeriod, onPeriodChange }) => {
+const DevPaymentPeriodSelector = ({ periods, selectedPeriod, onPeriodChange }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [animatedPeriods, setAnimatedPeriods] = useState([]);
   const [hoverIndex, setHoverIndex] = useState(null);
@@ -289,4 +289,4 @@ const PaymentPeriodSelector = ({ periods, selectedPeriod, onPeriodChange }) => {
   );
 };
 
-export default PaymentPeriodSelector;
+export default DevPaymentPeriodSelector;

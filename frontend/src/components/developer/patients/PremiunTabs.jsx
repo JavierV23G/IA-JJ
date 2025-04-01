@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import '../../../styles/developer/Patients/PremiunTabs.scss';
 
-const PremiumTabs = ({ activeTab, onTabChange }) => {
+const DevPremiumTabs = ({ activeTab, onTabChange }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isAnimating, setIsAnimating] = useState(false);
@@ -75,4 +75,4 @@ const PremiumTabs = ({ activeTab, onTabChange }) => {
   );
 };
 
-export default PremiumTabs;
+export default DevPremiumTabs;

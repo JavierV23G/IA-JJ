@@ -1,3 +1,4 @@
+// components/login/Login.jsx (dentro de Login.jsx o el componente que maneje el login)
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthLoadingModal from './AuthLoadingModal';
@@ -44,7 +45,7 @@ const Login = ({ onForgotPassword }) => {
       password: "JavierVargas12",
       fullname: "Javier Vargas",
       email: "javier@example.com",
-      role: "Administrator",
+      role: "PT",
       contact_number: "555-987-6543",
       documents: "ID-54321",
       zip_code: "90211",
@@ -55,7 +56,29 @@ const Login = ({ onForgotPassword }) => {
       password: "AlexMar09",
       fullname: "Alex Martinez",
       email: "Alex@example.com",
-      role: "PT - Administrator",
+      role: "Administrator",
+      contact_number: "555-987-6543",
+      documents: "ID-54321",
+      zip_code: "90211",
+      birth_date: "1985-10-20"
+    },
+    {
+      username: "Justin1", 
+      password: "Justin12",
+      fullname: "Justin Shimane",
+      email: "Justin@example.com",
+      role: "OT",
+      contact_number: "555-987-6543",
+      documents: "ID-54321",
+      zip_code: "90211",
+      birth_date: "1985-10-20"
+    },
+    {
+      username: "Arya1", 
+      password: "Arya12",
+      fullname: "Arya Pedoiem",
+      email: "arya@example.com",
+      role: "ST",
       contact_number: "555-987-6543",
       documents: "ID-54321",
       zip_code: "90211",
@@ -220,9 +243,12 @@ const Login = ({ onForgotPassword }) => {
       showSuccess('username');
       showSuccess('password');
       
+      // Extraer el rol base y dirigir al usuario a su interfaz específica
+      const baseRole = user.role.split(' - ')[0].toLowerCase();
+      
       // Redirigir después de mostrar el mensaje de éxito
       setTimeout(() => {
-        navigate('/homePage');
+        navigate(`/${baseRole}/homePage`);
       }, 2000);
     }, 2500);
   };

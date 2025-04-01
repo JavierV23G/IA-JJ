@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import '../../../styles/developer/accounting/TherapistFinancialList.scss';
 
-const TherapistFinancialList = ({ therapists, onTherapistClick, selectedPeriod }) => {
+const DevTherapistFinancialList = ({ therapists, onTherapistClick, selectedPeriod }) => {
   const [filteredTherapists, setFilteredTherapists] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: 'earnings', direction: 'desc' });
@@ -627,4 +627,4 @@ const TherapistFinancialList = ({ therapists, onTherapistClick, selectedPeriod }
   );
 };
 
-export default TherapistFinancialList;
+export default DevTherapistFinancialList;

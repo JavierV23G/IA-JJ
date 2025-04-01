@@ -4,7 +4,7 @@ import CalendarSelector from './CalendarSelector';
 import '../../../../../styles/developer/Patients/InfoPaciente/InfoGeneral.scss';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const InfoGeneral = ({ patientData }) => {
+const DevInfoGeneral = ({ patientData }) => {
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
   const [showCertDropdown, setShowCertDropdown] = useState(false);
@@ -568,4 +568,4 @@ const InfoGeneral = ({ patientData }) => {
   );
 };
 
-export default InfoGeneral;
+export default DevInfoGeneral;

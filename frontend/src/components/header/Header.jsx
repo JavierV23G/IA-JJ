@@ -1,13 +1,14 @@
+// components/header/Header.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../login/AuthContext'; // Importar el contexto de autenticación
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../login/AuthContext';
 import logoImg from '../../assets/LogoMHC.jpeg';
-import '../../styles/Header/Header.scss'; // Asegúrate de crear este archivo con los estilos correspondientes
-import LogoutAnimation from '../developer/welcome/LogoutAnimation'; // Importar la animación de logout
+import '../../styles/Header/Header.scss';
 
-const Header = () => {
+const Header = ({ onLogout }) => {
   const navigate = useNavigate();
-  const { currentUser, logout } = useAuth(); // Obtener datos de usuario y función de logout
+  const location = useLocation(); // Para detectar la ruta actual
+  const { currentUser } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [activeMenuIndex, setActiveMenuIndex] = useState(0);
   const [menuTransitioning, setMenuTransitioning] = useState(false);
@@ -19,21 +20,72 @@ const Header = () => {
   const [showAIAssistant, setShowAIAssistant] = useState(false);
   const notificationCount = 5;
   
-  // Refs para elementos del DOM
+  // Referencias DOM
   const userMenuRef = useRef(null);
   const menuRef = useRef(null);
   
-  // Opciones de menú principal con íconos
-  const menuOptions = [
-    { id: 1, name: "Patients", icon: "fa-user-injured", route: '/patients', color: "#36D1DC" },
-    { id: 2, name: "Referrals", icon: "fa-file-medical", route: '/referrals', color: "#FF9966" },
-    { id: 3, name: "Support", icon: "fa-headset", route: '/support', color: "#64B5F6" },
-    { id: 4, name: "System Management", icon: "fa-cogs", route: '/management', color: "#8B5CF6" },
-    { id: 5, name: "Accounting", icon: "fa-chart-pie", route: '/accounting', color: "#4CAF50" }
+  // Extraer el rol base y el rol completo para usar en las rutas
+  const baseRole = currentUser?.role?.split(' - ')[0].toLowerCase() || 'developer';
+  const fullRoleFormatted = currentUser?.role?.toLowerCase().replace(/ /g, '-') || 'developer';
+  
+  // Detectar si estamos en la página de referrals
+  const isReferralsPage = location.pathname.includes('/referrals') || 
+                          location.pathname.includes('/createNewReferral');
+  
+  // Opciones del menú principal con íconos (para uso por defecto)
+  const defaultMenuOptions = [
+    { id: 1, name: "Patients", icon: "fa-user-injured", route: `/${baseRole}/patients`, color: "#36D1DC" },
+    { id: 2, name: "Referrals", icon: "fa-file-medical", route: `/${baseRole}/referrals`, color: "#FF9966" },
+    { id: 3, name: "Support", icon: "fa-headset", route: `/${baseRole}/support`, color: "#64B5F6" },
+    { id: 4, name: "System Management", icon: "fa-cogs", route: `/${baseRole}/management`, color: "#8B5CF6" },
+    { id: 5, name: "Accounting", icon: "fa-chart-pie", route: `/${baseRole}/accounting`, color: "#4CAF50" }
   ];
   
-  // Usar datos de usuario del contexto de autenticación si están disponibles,
-  // de lo contrario usar datos estáticos como respaldo
+  // Opciones del menú de referrals con iconos y colores personalizados
+  const referralsMenuOptions = [
+    { id: 1, name: "Admin Referral Inbox", icon: "fa-inbox", route: `/${baseRole}/referrals/inbox`, color: "#4facfe" },
+    { id: 2, name: "Create New Referral", icon: "fa-file-medical", route: `/${baseRole}/createNewReferral`, color: "#ff9966" },
+    { id: 3, name: "Resend Referral", icon: "fa-paper-plane", route: `/${baseRole}/referrals/resend`, color: "#00e5ff" },
+    { id: 4, name: "View Referral History", icon: "fa-history", route: `/${baseRole}/referrals/history`, color: "#8c54ff" },
+    { id: 5, name: "Referral Stats", icon: "fa-chart-bar", route: `/${baseRole}/referrals/stats`, color: "#4CAF50" }
+  ];
+  
+  // Elegir qué menú mostrar según la ruta actual
+  const menuOptions = isReferralsPage ? referralsMenuOptions : defaultMenuOptions;
+  
+  // Configurar el índice activo basado en la ruta actual
+  useEffect(() => {
+    if (isReferralsPage) {
+      // Encontrar qué opción del menú de referrals coincide mejor con la ruta actual
+      const matchingOptionIndex = referralsMenuOptions.findIndex(option => 
+        location.pathname.includes(option.route) || 
+        (option.name === "Create New Referral" && location.pathname.includes('createNewReferral'))
+      );
+      
+      if (matchingOptionIndex !== -1) {
+        setActiveMenuIndex(matchingOptionIndex);
+      } else {
+        // Si no hay coincidencia, establecer "Create New Referral" como activo por defecto
+        const createNewReferralIndex = referralsMenuOptions.findIndex(option => 
+          option.name === "Create New Referral"
+        );
+        setActiveMenuIndex(createNewReferralIndex !== -1 ? createNewReferralIndex : 0);
+      }
+    } else {
+      // Para el menú principal, encontrar qué opción coincide con la ruta actual
+      const matchingOptionIndex = defaultMenuOptions.findIndex(option => 
+        location.pathname.includes(option.route.split('/').pop())
+      );
+      
+      if (matchingOptionIndex !== -1) {
+        setActiveMenuIndex(matchingOptionIndex);
+      } else {
+        setActiveMenuIndex(0); // Default para página principal
+      }
+    }
+  }, [location.pathname, isReferralsPage, baseRole]);
+  
+  // Usar datos de usuario del contexto de autenticación
   const userData = currentUser ? {
     name: currentUser.fullname || currentUser.username,
     avatar: getInitials(currentUser.fullname || currentUser.username),
@@ -88,13 +140,13 @@ const Header = () => {
   // Parallax effect with performance optimizations for mobile
   useEffect(() => {
     const handleMouseMove = (e) => {
-      if (!isMobile && !isLoggingOut) { // Disable parallax on mobile for performance and during logout
+      if (!isMobile && !isLoggingOut) { // Disable parallax on mobile and during logout
         const { clientX, clientY } = e;
-        // Para obtener el width y height correctamente, usamos document.body en lugar de un ref específico
+        // Para obtener el width y height correctamente, usamos document.body
         const width = window.innerWidth;
         const height = window.innerHeight;
         
-        // Calculate position relative to center with reduced movement on lower-power devices
+        // Calculate position relative to center with reduced movement
         const multiplier = isTablet ? 15 : 20;
         const xPos = (clientX / width - 0.5) * multiplier;
         const yPos = (clientY / height - 0.5) * (isTablet ? 10 : 15);
@@ -150,20 +202,19 @@ const Header = () => {
     );
   };
   
-  // Handle logout with enhanced animation - ahora usa la función del contexto
+  // Handle logout - ahora delegamos al componente padre
   const handleLogout = () => {
     setIsLoggingOut(true);
     setShowUserMenu(false);
     setShowAIAssistant(false);
     
-    // Agregar clases de cierre de sesión a todo el documento
+    // Agregar clases de cierre de sesión al header
     document.body.classList.add('logging-out');
     
-    // Adjusted timing for different devices
-    setTimeout(() => {
-      logout(); // Llamar a la función de logout del contexto
-      navigate('/');
-    }, isMobile ? 3000 : 5000);
+    // Llamar a la función onLogout que recibimos como prop
+    if (onLogout && typeof onLogout === 'function') {
+      onLogout();
+    }
   };
   
   // Handle menu option click with responsive transitions
@@ -188,8 +239,13 @@ const Header = () => {
     
     // Add transition effect before navigation
     setTimeout(() => {
-      navigate('/profile');
+      navigate(`/${baseRole}/profile`);
     }, isMobile ? 300 : 500);
+  };
+  
+  // Handle navigation to main menu
+  const handleMainMenuTransition = () => {
+    navigate(`/${baseRole}/homePage`);
   };
   
   // Get visible menu options for carousel with responsive considerations
@@ -227,15 +283,34 @@ const Header = () => {
 
   return (
     <>
-      {/* Logout animation component */}
-      {isLoggingOut && <LogoutAnimation isMobile={isMobile} />}
-      
       <header className={`main-header ${headerGlow ? 'glow-effect' : ''} ${menuTransitioning ? 'transitioning' : ''} ${isLoggingOut ? 'logging-out' : ''}`}>
         <div className="header-container">
           {/* Logo con efectos */}
           <div className="logo-container">
             <div className="logo-glow"></div>
-            <img src={logoImg} alt="TherapySync Logo" className="logo" onClick={() => !isLoggingOut && navigate('/')} />
+            <img src={logoImg} alt="TherapySync Logo" className="logo" onClick={() => !isLoggingOut && handleMainMenuTransition()} />
+            
+            {/* Mostrar botones de navegación en la página de referrals */}
+            {isReferralsPage && (
+              <div className="menu-navigation">
+                <button 
+                  className="nav-button main-menu" 
+                  onClick={handleMainMenuTransition}
+                  title="Volver al menú principal"
+                >
+                  <i className="fas fa-th-large"></i>
+                  <span>Main Menu</span>
+                </button>
+                
+                <button 
+                  className="nav-button referrals-menu active" 
+                  title="Menú de Referrals"
+                >
+                  <i className="fas fa-file-medical"></i>
+                  <span>Referrals</span>
+                </button>
+              </div>
+            )}
           </div>
           
           {/* Enhanced carousel with responsive layout */}
@@ -346,7 +421,7 @@ const Header = () => {
                 <div className="support-menu-section">
                   <div className="section-title">Preferences</div>
                   <div className="support-menu-items">
-                    <div className="support-menu-item">
+                  <div className="support-menu-item">
                       <i className="fas fa-bell"></i>
                       <span>Notifications</span>
                       <div className="support-notification-badge">{notificationCount}</div>

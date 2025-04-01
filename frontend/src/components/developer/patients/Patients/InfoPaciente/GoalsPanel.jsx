@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import '../../../../../styles/developer/Patients/InfoPaciente/GoalsPanel.scss';
 
 
-const GoalsPanel = ({ disciplineType, patientId, isEditing }) => {
+const DevGoalsPanel = ({ disciplineType, patientId, isEditing }) => {
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newGoalText, setNewGoalText] = useState('');
@@ -203,4 +203,4 @@ const GoalsPanel = ({ disciplineType, patientId, isEditing }) => {
   );
 };
 
-export default GoalsPanel;
+export default DevGoalsPanel;

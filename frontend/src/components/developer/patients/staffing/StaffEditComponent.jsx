@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../../../../styles/developer/Patients/Staffing/StaffEditComponent.scss';
 
-const StaffEditComponent = ({ onBackToOptions }) => {
+const DevStaffEditComponent = ({ onBackToOptions }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState('Conectando con la base de datos...');
   const [staffList, setStaffList] = useState([]);
@@ -1036,4 +1036,4 @@ const StaffEditComponent = ({ onBackToOptions }) => {
   );
 };
 
-export default StaffEditComponent;
+export default DevStaffEditComponent;

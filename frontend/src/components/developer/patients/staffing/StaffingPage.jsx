@@ -8,7 +8,7 @@ import AddStaffForm from './AddStaffForm';
 import StaffListComponent from './StaffListComponent';
 import StaffEditComponent from './StaffEditComponent';
 
-const StaffingPage = () => {
+const DevStaffingPage = () => {
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [menuTransitioning, setMenuTransitioning] = useState(false);
@@ -546,4 +546,4 @@ const StaffingPage = () => {
   );
 };
 
-export default StaffingPage;
+export default DevStaffingPage;

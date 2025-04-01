@@ -3,7 +3,7 @@ import VisitTypeSelector from './VisitTypeSelector';
 import TherapistSelector from './TherapistSelector';
 import '../../../../../styles/developer/Patients/InfoPaciente/VisitDetail.scss';
 
-const VisitDetail = ({ visit, onClose, onUpdate, onDelete, addMode = false, discipline = 'PT' }) => {
+const DevVisitDetail = ({ visit, onClose, onUpdate, onDelete, addMode = false, discipline = 'PT' }) => {
   const [isEditing, setIsEditing] = useState(addMode);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -442,4 +442,4 @@ const VisitDetail = ({ visit, onClose, onUpdate, onDelete, addMode = false, disc
   );
 };
 
-export default VisitDetail;
+export default DevVisitDetail;

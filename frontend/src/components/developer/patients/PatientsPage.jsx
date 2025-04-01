@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logoImg from '../../../assets/LogoMHC.jpeg';
 import '../../../styles/developer/Patients/PatientsPage.scss';
-import AIAssistant from '../welcome/AIAssistant';
+import DevAIAssistant from '../welcome/AIAssistant';
 
 const userData = {
   name: 'Luis Nava',
@@ -139,7 +139,7 @@ const StatCard = ({ title, value, icon, color }) => {
 };
 
 // Componente principal
-const PatientsPage = () => {
+const DevPatientsPage = () => {
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -1259,7 +1259,7 @@ const handleActionClick = (action, patient) => {
       </main>
       
       {/* Asistente de IA */}
-      {showAIAssistant && <AIAssistant />}
+      {showAIAssistant && <DevAIAssistant />}
       
       {/* Botón de Acción Rápida Flotante con Menú */}
       <div className="quick-action-btn">
@@ -1321,4 +1321,4 @@ const handleActionClick = (action, patient) => {
   );
 };
 
-export default PatientsPage;
+export default DevPatientsPage;

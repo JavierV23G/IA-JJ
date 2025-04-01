@@ -4,7 +4,7 @@ import GoalsPanel from './GoalsPanel.jsx';
 import FrequencySelector from './FrequencySelector.jsx';
 import '../../../../../styles/developer/Patients/InfoPaciente/DisciplineTherapy.scss';
 
-const PhysicalTherapy = ({ therapists, patientId }) => {
+const DevPhysicalTherapy = ({ therapists, patientId }) => {
   const [showGoals, setShowGoals] = useState(false);
   const [currentFrequency, setCurrentFrequency] = useState("2W2 1W1");
   const [isEditing, setIsEditing] = useState(false);
@@ -155,4 +155,4 @@ const PhysicalTherapy = ({ therapists, patientId }) => {
   );
 };
 
-export default PhysicalTherapy;
+export default DevPhysicalTherapy;

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import '../../../styles/developer/Profile/UserProfile.scss';
 
-const UserProfile = () => {
+const DevUserProfile = () => {
   // User data state
   const [userData, setUserData] = useState({
     name: 'Luis Nava',
@@ -1453,4 +1453,4 @@ const UserProfile = () => {
 );
 };
 
-export default UserProfile;
+export default DevUserProfile;

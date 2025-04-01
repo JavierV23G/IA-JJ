@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../../../../../styles/developer/Patients/InfoPaciente/CommentsSection.scss';
 
-const CommentsSection = ({ patientId }) => {
+const DevCommentsSection = ({ patientId }) => {
   const [comments, setComments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState('all');
@@ -640,4 +640,4 @@ const CommentsSection = ({ patientId }) => {
   );
 };
 
-export default CommentsSection;
+export default DevCommentsSection;

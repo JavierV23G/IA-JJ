@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 
 // Componente de DatePicker específico para fecha de nacimiento
-const DOBDatePicker = ({ 
+const DevDOBDatePicker = ({ 
   selectedDate, 
   onChange, 
   name = "dob",
@@ -538,4 +538,4 @@ const DOBDatePicker = ({
   );
 };
 
-export default DOBDatePicker;
+export default DevDOBDatePicker;
