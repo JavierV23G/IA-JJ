@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
   
   // Instancia del servicio de timeout
   const sessionTimeout = createSessionTimeout({
-    timeout: 5 * 10 * 1000, // 15 minutos en milisegundos
+    timeout: 10 * 30 * 1000, // 
     warningTime: 60 * 1000, // Advertencia 1 minuto antes
     onTimeout: handleSessionTimeout,
     onWarning: handleSessionWarning,
