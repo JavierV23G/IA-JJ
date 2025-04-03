@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../components/login/AuthContext'; // Importar el contexto de autenticación
 import '../../../styles/developer/accounting/Accounting.scss';
 import logoImg from '../../../assets/LogoMHC.jpeg';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -7,6 +8,7 @@ import AccountingDashboard from './AccountingDashboard.jsx';
 import PaymentPeriodSelector from './PaymentPeriodSelector.jsx';
 import TherapistFinancialList from './TherapistFinancialList.jsx';
 import TherapistPaymentModal from './TherapistPaymentModal.jsx';
+import LogoutAnimation from '../../../components/LogOut/LogOut'; // Importar componente de animación
 
 // Componente para las partículas animadas de fondo
 const ParticlesBackground = () => {
@@ -111,6 +113,7 @@ const ParticlesBackground = () => {
 
 const TPAccounting = () => {
   const navigate = useNavigate();
+  const { currentUser, logout } = useAuth(); // Usar el contexto de autenticación
   
   // Estados para gestionar la interfaz y los datos
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -124,6 +127,7 @@ const TPAccounting = () => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [animateIn, setAnimateIn] = useState(false);
   const [notificationCount] = useState(3);
+  const [isMobile, setIsMobile] = useState(false);
   
   // Ref para el menú de usuario
   const userMenuRef = useRef(null);
@@ -139,6 +143,37 @@ const TPAccounting = () => {
     { id: 7, period: "Apr 1 to 15, 2025", paymentDate: "May 15, 2025", status: "upcoming", amount: 46200.00 },
     { id: 8, period: "Apr 16 to 30, 2025", paymentDate: "May 31, 2025", status: "upcoming", amount: 44500.00 },
   ];
+
+  // Función para obtener iniciales del nombre
+  function getInitials(name) {
+    if (!name) return "U";
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  }
+  
+  // Usar datos de usuario del contexto de autenticación
+  const userData = {
+    name: currentUser?.fullname || currentUser?.username || 'Usuario',
+    avatar: getInitials(currentUser?.fullname || currentUser?.username || 'Usuario'),
+    email: currentUser?.email || 'usuario@ejemplo.com',
+    role: currentUser?.role || 'Usuario',
+    status: 'online', // online, away, busy, offline
+  };
+  
+  // Detectar el tamaño de la pantalla para responsive
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    handleResize(); // Comprobar inicialmente
+    window.addEventListener('resize', handleResize);
+    
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Efecto para cargar datos iniciales con animación mejorada
   useEffect(() => {
@@ -332,20 +367,6 @@ const TPAccounting = () => {
       setAnimateIn(false);
     };
   }, []);
-  
-  const userData = {
-    name: 'Luis Nava',
-    avatar: 'LN',
-    email: 'luis.nava@therapysync.com',
-    role: 'Developer',
-    status: 'online', // online, away, busy, offline
-    stats: {
-    },
-    quickActions: [
-      
-    ]
-  };
-
 
   // Efecto para cerrar menú de usuario al hacer clic fuera
   useEffect(() => {
@@ -363,6 +384,8 @@ const TPAccounting = () => {
 
   // Manejar cambio de período seleccionado
   const handlePeriodChange = (period) => {
+    if (isLoggingOut) return; // No permitir acciones durante cierre de sesión
+    
     setSelectedPeriod(period);
   };
   
@@ -371,29 +394,48 @@ const TPAccounting = () => {
     setIsLoggingOut(true);
     setShowUserMenu(false);
     
-    setTimeout(() => {
-      navigate('/');
-    }, 800);
+    // Aplicar clase a document.body para efectos globales
+    document.body.classList.add('logging-out');
+  };
+  
+  // Callback para cuando la animación de cierre de sesión termine
+  const handleLogoutAnimationComplete = () => {
+    // Ejecutar el logout del contexto de autenticación
+    logout();
+    // Navegar a la página de inicio de sesión
+    navigate('/');
   };
   
   // Manejar clic en terapeuta para mostrar modal
   const handleTherapistClick = (therapist) => {
+    if (isLoggingOut) return; // No permitir acciones durante cierre de sesión
+    
     setSelectedTherapist(therapist);
     setShowTherapistModal(true);
   };
   
   // Manejar navegación al menú principal con transición mejorada
   const handleMainMenuTransition = () => {
+    if (isLoggingOut) return; // No permitir navegación durante cierre de sesión
+    
     setMenuTransitioning(true);
     
+    // Extraer el rol base para la navegación
+    const baseRole = currentUser?.role?.split(' - ')[0].toLowerCase() || 'developer';
+    
     setTimeout(() => {
-      navigate('/homePage');
+      navigate(`/${baseRole}/homePage`);
     }, 400);
   };
   
   // Manejar redirección a página de paciente
   const handlePatientClick = (patientId) => {
-    navigate(`../pacientes/Patients/infoPatients/${patientId}`);
+    if (isLoggingOut) return; // No permitir navegación durante cierre de sesión
+    
+    // Extraer el rol base para la navegación
+    const baseRole = currentUser?.role?.split(' - ')[0].toLowerCase() || 'developer';
+    
+    navigate(`/${baseRole}/paciente/${patientId}`);
   };
 
   return (
@@ -404,6 +446,14 @@ const TPAccounting = () => {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
     >
+      {/* Animación de cierre de sesión - Mostrar solo cuando se está cerrando sesión */}
+      {isLoggingOut && (
+        <LogoutAnimation 
+          isMobile={isMobile} 
+          onAnimationComplete={handleLogoutAnimationComplete} 
+        />
+      )}
+      
       {/* Fondo mejorado con parallax y partículas */}
       <div className="parallax-background">
         <div className="gradient-overlay"></div>
@@ -411,7 +461,7 @@ const TPAccounting = () => {
       </div>
       
       {/* Header con logo y perfil */}
-      <header className="main-header">
+      <header className={`main-header ${isLoggingOut ? 'logging-out' : ''}`}>
         <div className="header-container">
           <div className="logo-container">
             <div className="logo-wrapper">
@@ -427,6 +477,7 @@ const TPAccounting = () => {
                 title="Back to main menu"
                 whileHover={{ y: -2, boxShadow: "0 4px 8px rgba(0,0,0,0.2)" }}
                 whileTap={{ y: 0, boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}
+                disabled={isLoggingOut}
               >
                 <i className="fas fa-th-large"></i>
                 <span>Main Menu</span>
@@ -438,6 +489,7 @@ const TPAccounting = () => {
                 title="Financial Management"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                disabled={isLoggingOut}
               >
                 <i className="fas fa-chart-pie"></i>
                 <span>Accounting</span>
@@ -450,7 +502,7 @@ const TPAccounting = () => {
           <div className="support-user-profile" ref={userMenuRef}>
             <div 
               className={`support-profile-button ${showUserMenu ? 'active' : ''}`} 
-              onClick={() => setShowUserMenu(!showUserMenu)}
+              onClick={() => !isLoggingOut && setShowUserMenu(!showUserMenu)}
               data-tooltip="Your profile and settings"
             >
               <div className="support-avatar">
@@ -467,7 +519,7 @@ const TPAccounting = () => {
             </div>
             
             {/* Menú desplegable del usuario mejorado con estadísticas */}
-            {showUserMenu && (
+            {showUserMenu && !isLoggingOut && (
               <div className="support-user-menu">
                 <div className="support-menu-header">
                   <div className="support-user-info">
@@ -570,7 +622,7 @@ const TPAccounting = () => {
       </header>
       
       {/* Contenido principal con efectos mejorados */}
-      <main className="accounting-content">
+      <main className={`accounting-content ${isLoggingOut ? 'fade-out' : ''}`}>
         {isLoading ? (
           <div className="loading-container">
             <div className="loading-spinner-container">
@@ -627,16 +679,32 @@ const TPAccounting = () => {
                   <span>Current Period: {selectedPeriod?.period}</span>
                 </div>
                 <div className="actions-toolbar">
-                  <button className="toolbar-button" title="Refresh Data">
+                  <button 
+                    className="toolbar-button" 
+                    title="Refresh Data"
+                    disabled={isLoggingOut}
+                  >
                     <i className="fas fa-sync-alt"></i>
                   </button>
-                  <button className="toolbar-button" title="Export Reports">
+                  <button 
+                    className="toolbar-button" 
+                    title="Export Reports"
+                    disabled={isLoggingOut}
+                  >
                     <i className="fas fa-file-export"></i>
                   </button>
-                  <button className="toolbar-button" title="Print">
+                  <button 
+                    className="toolbar-button" 
+                    title="Print"
+                    disabled={isLoggingOut}
+                  >
                     <i className="fas fa-print"></i>
                   </button>
-                  <button className="toolbar-button" title="Settings">
+                  <button 
+                    className="toolbar-button" 
+                    title="Settings"
+                    disabled={isLoggingOut}
+                  >
                     <i className="fas fa-cog"></i>
                   </button>
                 </div>
@@ -665,6 +733,7 @@ const TPAccounting = () => {
                   periods={paymentPeriods}
                   selectedPeriod={selectedPeriod}
                   onPeriodChange={handlePeriodChange}
+                  isDisabled={isLoggingOut}
                 />
               </motion.div>
               
@@ -683,6 +752,7 @@ const TPAccounting = () => {
                   therapists={therapists}
                   onTherapistClick={handleTherapistClick}
                   selectedPeriod={selectedPeriod}
+                  isDisabled={isLoggingOut}
                 />
               </motion.div>
               
@@ -818,7 +888,7 @@ const TPAccounting = () => {
       
       {/* Modal de detalles del terapeuta mejorado */}
       <AnimatePresence>
-        {showTherapistModal && selectedTherapist && (
+        {showTherapistModal && selectedTherapist && !isLoggingOut && (
           <TherapistPaymentModal 
             therapist={selectedTherapist}
             period={selectedPeriod}
@@ -829,28 +899,30 @@ const TPAccounting = () => {
       </AnimatePresence>
       
       {/* Añadir un botón de acción flotante para acciones rápidas */}
-      <div className="floating-action-button">
-        <button className="fab-main">
-          <i className="fas fa-plus"></i>
-        </button>
-        <div className="fab-buttons">
-          <button className="fab-button" title="New Report">
-            <i className="fas fa-file-alt"></i>
+      {!isLoggingOut && (
+        <div className="floating-action-button">
+          <button className="fab-main" disabled={isLoggingOut}>
+            <i className="fas fa-plus"></i>
           </button>
-          <button className="fab-button" title="Add Payment">
-            <i className="fas fa-money-bill-wave"></i>
-          </button>
-          <button className="fab-button" title="Export Data">
-            <i className="fas fa-file-export"></i>
-          </button>
+          <div className="fab-buttons">
+            <button className="fab-button" title="New Report" disabled={isLoggingOut}>
+              <i className="fas fa-file-alt"></i>
+            </button>
+            <button className="fab-button" title="Add Payment" disabled={isLoggingOut}>
+              <i className="fas fa-money-bill-wave"></i>
+            </button>
+            <button className="fab-button" title="Export Data" disabled={isLoggingOut}>
+              <i className="fas fa-file-export"></i>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
       
       {/* Snackbar para notificaciones - Nuevo componente */}
       <div className="notification-snackbar">
         <i className="fas fa-info-circle"></i>
         <span>Financial data updated successfully</span>
-        <button className="snackbar-close">
+        <button className="snackbar-close" disabled={isLoggingOut}>
           <i className="fas fa-times"></i>
         </button>
       </div>

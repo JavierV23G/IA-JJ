@@ -1,21 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../components/login/AuthContext'; // Importar el contexto de autenticación
 import logoImg from '../../../assets/LogoMHC.jpeg';
 import '../../../styles/developer/Patients/PatientsPage.scss';
-import DevAIAssistant from '../welcome/AIAssistant';
-
-const userData = {
-  name: 'Luis Nava',
-  avatar: 'LN',
-  email: 'luis.nava@therapysync.com',
-  role: 'Developer',
-  status: 'online', // online, away, busy, offline
-  stats: {
-  },
-  quickActions: [
-    
-  ]
-};
+import AIAssistant from '../welcome/AIAssistant';
+import LogoutAnimation from '../../../components/LogOut/LogOut'; // Importa el componente de animación de cierre de sesión
 
 // Componente de Tabs Premium con animaciones mejoradas
 const PremiumTabs = ({ activeTab, onChangeTab }) => {
@@ -54,18 +43,6 @@ const PatientCard = ({ patient, onView, onEdit, onNotes }) => {
       default: return '';
     }
   };
-
-    const userData = {
-    name: 'Luis Nava',
-    avatar: 'LN',
-    email: 'luis.nava@therapysync.com',
-    role: 'Developer',
-    status: 'online', // online, away, busy, offline
-    stats: {
-    },
-  
-  };
-
   
   return (
     <div className={`patient-card ${getStatusClass(patient.status)}`}>
@@ -138,9 +115,11 @@ const StatCard = ({ title, value, icon, color }) => {
   );
 };
 
-// Componente principal
 const DevPatientsPage = () => {
   const navigate = useNavigate();
+  // Usar el contexto de autenticación para obtener el usuario actual
+  const { currentUser, logout } = useAuth();
+  
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [activeMenuOption, setActiveMenuOption] = useState('Patients');
@@ -153,7 +132,29 @@ const DevPatientsPage = () => {
   const [sortOption, setSortOption] = useState('nameAsc');
   const [showQuickTour, setShowQuickTour] = useState(false);
   const [activePage, setActivePage] = useState(1);
+  const [isMobile, setIsMobile] = useState(false); // Para responsive en LogoutAnimation
   const notificationCount = 0; // Define notificationCount with a default value
+  
+  // Función para obtener iniciales del nombre
+  function getInitials(name) {
+    if (!name) return "U";
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  }
+  
+  // Datos de usuario del contexto de autenticación
+  const userData = {
+    name: currentUser?.fullname || currentUser?.username || 'Usuario',
+    avatar: getInitials(currentUser?.fullname || currentUser?.username || 'Usuario'),
+    email: currentUser?.email || 'usuario@ejemplo.com',
+    role: currentUser?.role || 'Usuario',
+    status: 'online', // online, away, busy, offline
+    stats: {},
+    quickActions: []
+  };
   
   // Opciones de ordenamiento
   const sortOptions = [
@@ -467,6 +468,18 @@ const DevPatientsPage = () => {
     { title: "Expired Certifications", value: patients.filter(p => p.status === "Expired").length, icon: "fa-user-times", color: "red" },
   ];
   
+  // Detectar el tamaño de la pantalla para responsive
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    handleResize(); // Comprobar inicialmente
+    window.addEventListener('resize', handleResize);
+    
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
   // Efecto para cerrar menú de filtros al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -522,24 +535,30 @@ const DevPatientsPage = () => {
     setMenuTransitioning(true);
     setShowAIAssistant(false);
     
+    // Extraer el rol base para la navegación
+    const baseRole = currentUser?.role?.split(' - ')[0].toLowerCase() || 'developer';
+    
     // Simular animación de transición y luego navegar
     setTimeout(() => {
-      navigate('/homePage');
+      navigate(`/${baseRole}/homePage`);
     }, 300);
   };
   
-// Manejar cambio de pestaña
-const handleTabChange = (tab) => {
-  if (tab === 'Staffing') {
-    // Navegar a la página de Staffing
-    setMenuTransitioning(true);
-    setShowAIAssistant(false);
-    
-    setTimeout(() => {
-      navigate('/staffing');
-    }, 300);
-  }
-};
+  // Manejar cambio de pestaña
+  const handleTabChange = (tab) => {
+    if (tab === 'Staffing') {
+      // Navegar a la página de Staffing
+      setMenuTransitioning(true);
+      setShowAIAssistant(false);
+      
+      // Extraer el rol base para la navegación
+      const baseRole = currentUser?.role?.split(' - ')[0].toLowerCase() || 'developer';
+      
+      setTimeout(() => {
+        navigate(`/${baseRole}/staffing`);
+      }, 300);
+    }
+  };
   
   // Manejar clic en una opción de menú
   const handleMenuOptionClick = (option) => {
@@ -595,17 +614,23 @@ const handleTabChange = (tab) => {
     setActivePage(1);
   };
   
+  // Manejar cierre de sesión - con animación mejorada
   const handleLogout = () => {
     setIsLoggingOut(true);
     setShowUserMenu(false);
     setShowAIAssistant(false);
     
-    // Después de que la animación se complete, redirigir al login
-    setTimeout(() => {
-      navigate('/');
-    }, 5000); // Tiempo ajustado para la animación mejorada
+    // Aplicar clase a document.body para efectos globales
+    document.body.classList.add('logging-out');
   };
-
+  
+  // Callback para cuando la animación de cierre de sesión termine
+  const handleLogoutAnimationComplete = () => {
+    // Ejecutar el logout del contexto de autenticación
+    logout();
+    // Navegar a la página de inicio de sesión
+    navigate('/');
+  };
 
   // Cambiar vista entre lista y cuadrícula
   const toggleView = (view) => {
@@ -630,31 +655,33 @@ const handleTabChange = (tab) => {
   };
   
   // Manejar clic en botón de acción
-// Manejar clic en botón de acción
-const handleActionClick = (action, patient) => {
-  console.log(`${action} clicked for patient:`, patient);
-  
-  switch(action) {
-    case 'view':
-      // Navegar a la página de información del paciente
-      setMenuTransitioning(true);
-      
-      setTimeout(() => {
-        navigate(`/paciente/${patient.id}`);
-      }, 300);
-      break;
-    case 'edit':
-      // Aquí iría la lógica para editar el paciente
-      console.log('Editar paciente:', patient);
-      break;
-    case 'notes':
-      // Aquí iría la lógica para ver/editar notas del paciente
-      console.log('Notas del paciente:', patient);
-      break;
-    default:
-      break;
-  }
-};
+  const handleActionClick = (action, patient) => {
+    console.log(`${action} clicked for patient:`, patient);
+    
+    // Extraer el rol base para la navegación
+    const baseRole = currentUser?.role?.split(' - ')[0].toLowerCase() || 'developer';
+    
+    switch(action) {
+      case 'view':
+        // Navegar a la página de información del paciente
+        setMenuTransitioning(true);
+        
+        setTimeout(() => {
+          navigate(`/${baseRole}/paciente/${patient.id}`);
+        }, 300);
+        break;
+      case 'edit':
+        // Aquí iría la lógica para editar el paciente
+        console.log('Editar paciente:', patient);
+        break;
+      case 'notes':
+        // Aquí iría la lógica para ver/editar notas del paciente
+        console.log('Notas del paciente:', patient);
+        break;
+      default:
+        break;
+    }
+  };
   
   // Manejar cambio de página
   const handlePageChange = (pageNumber) => {
@@ -696,7 +723,15 @@ const handleActionClick = (action, patient) => {
   };
 
   return (
-    <div className={`patients-dashboard ${menuTransitioning ? 'transitioning' : ''}`}>
+    <div className={`patients-dashboard ${menuTransitioning ? 'transitioning' : ''} ${isLoggingOut ? 'logging-out' : ''}`}>
+      {/* Animación de cierre de sesión - Mostrar solo cuando se está cerrando sesión */}
+      {isLoggingOut && (
+        <LogoutAnimation 
+          isMobile={isMobile} 
+          onAnimationComplete={handleLogoutAnimationComplete} 
+        />
+      )}
+      
       {/* Fondo parallax */}
       <div className="parallax-background">
         <div className="gradient-overlay"></div>
@@ -704,7 +739,7 @@ const handleActionClick = (action, patient) => {
       </div>
       
       {/* Indicador flotante para cambiar al menú principal */}
-      {showMenuSwitch && (
+      {showMenuSwitch && !isLoggingOut && (
         <div 
           className="menu-switch-indicator"
           onClick={handleMainMenuTransition}
@@ -715,12 +750,12 @@ const handleActionClick = (action, patient) => {
       )}
       
       {/* Header con logo y perfil */}
-      <header className="main-header">
+      <header className={`main-header ${isLoggingOut ? 'logging-out' : ''}`}>
         <div className="header-container">
           {/* Logo y navegación */}
           <div className="logo-container">
             <div className="logo-wrapper">
-              <img src={logoImg} alt="TherapySync Logo" className="logo" />
+            <img src={logoImg} alt="TherapySync Logo" className="logo" />
               <div className="logo-glow"></div>
             </div>
             
@@ -730,6 +765,7 @@ const handleActionClick = (action, patient) => {
                 className="nav-button main-menu" 
                 onClick={handleMainMenuTransition}
                 title="Back to main menu"
+                disabled={isLoggingOut}
               >
                 <i className="fas fa-th-large"></i>
                 <span>Main Menu</span>
@@ -739,6 +775,7 @@ const handleActionClick = (action, patient) => {
               <button 
                 className="nav-button patients-menu active" 
                 title="Patients Menu"
+                disabled={isLoggingOut}
               >
                 <i className="fas fa-user-injured"></i>
                 <span>Patients</span>
@@ -756,7 +793,7 @@ const handleActionClick = (action, patient) => {
           <div className="support-user-profile" ref={userMenuRef}>
             <div 
               className={`support-profile-button ${showUserMenu ? 'active' : ''}`} 
-              onClick={() => setShowUserMenu(!showUserMenu)}
+              onClick={() => !isLoggingOut && setShowUserMenu(!showUserMenu)}
               data-tooltip="Your profile and settings"
             >
               <div className="support-avatar">
@@ -773,7 +810,7 @@ const handleActionClick = (action, patient) => {
             </div>
             
             {/* Menú desplegable del usuario mejorado con estadísticas */}
-            {showUserMenu && (
+            {showUserMenu && !isLoggingOut && (
               <div className="support-user-menu">
                 <div className="support-menu-header">
                   <div className="support-user-info">
@@ -876,7 +913,7 @@ const handleActionClick = (action, patient) => {
       </header>
       
       {/* Contenido principal */}
-      <main className="patients-content">
+      <main className={`patients-content ${isLoggingOut ? 'fade-out' : ''}`}>
         <div className="patients-container">
           {/* Header del dashboard */}
           <div className="patients-header">
@@ -886,10 +923,10 @@ const handleActionClick = (action, patient) => {
                 Streamline your therapy workflow with complete patient information at your fingertips
               </p>
               <div className="header-actions">
-                <button className="header-action-btn" onClick={toggleQuickTour}>
+                <button className="header-action-btn" onClick={toggleQuickTour} disabled={isLoggingOut}>
                   <i className="fas fa-info-circle"></i> Quick Tour
                 </button>
-                <button className="header-action-btn">
+                <button className="header-action-btn" disabled={isLoggingOut}>
                   <i className="fas fa-plus"></i> New Patient
                 </button>
               </div>
@@ -930,6 +967,7 @@ const handleActionClick = (action, patient) => {
                     className="toggle-filters-btn" 
                     onClick={toggleFilters}
                     title={showFilters ? "Collapse filters" : "Expand filters"}
+                    disabled={isLoggingOut}
                   >
                     <i className={`fas fa-chevron-${showFilters ? 'up' : 'down'}`}></i>
                   </button>
@@ -948,13 +986,14 @@ const handleActionClick = (action, patient) => {
                           placeholder="Search agencies..." 
                           value={agencySearchTerm}
                           onChange={(e) => setAgencySearchTerm(e.target.value)}
+                          disabled={isLoggingOut}
                         />
                       </div>
                       
                       <div className="agency-list">
                         <div 
                           className={`agency-item ${selectedAgency === 'all' ? 'active' : ''}`}
-                          onClick={() => handleAgencySelect('all')}
+                          onClick={() => !isLoggingOut && handleAgencySelect('all')}
                         >
                           <i className="fas fa-hospital-alt"></i> All Agencies
                         </div>
@@ -962,7 +1001,7 @@ const handleActionClick = (action, patient) => {
                           <div 
                             key={index} 
                             className={`agency-item ${selectedAgency === agency ? 'active' : ''}`}
-                            onClick={() => handleAgencySelect(agency)}
+                            onClick={() => !isLoggingOut && handleAgencySelect(agency)}
                           >
                             <i className="fas fa-building"></i> {agency}
                           </div>
@@ -979,7 +1018,8 @@ const handleActionClick = (action, patient) => {
                             <button 
                               key={index} 
                               className={`type-button ${selectedTherapistType === type ? 'active' : ''}`}
-                              onClick={() => handleTherapistTypeSelect(type)}
+                              onClick={() => !isLoggingOut && handleTherapistTypeSelect(type)}
+                              disabled={isLoggingOut}
                             >
                               {type === 'all' ? 'All' : type}
                             </button>
@@ -990,7 +1030,7 @@ const handleActionClick = (action, patient) => {
                       <div className="therapist-list">
                         <div 
                           className={`therapist-item ${selectedTherapist === 'all' ? 'active' : ''}`}
-                          onClick={() => handleTherapistSelect('all')}
+                          onClick={() => !isLoggingOut && handleTherapistSelect('all')}
                         >
                           <i className="fas fa-user-md"></i> All Therapists
                         </div>
@@ -998,7 +1038,7 @@ const handleActionClick = (action, patient) => {
                           <div 
                             key={index} 
                             className={`therapist-item ${selectedTherapist === therapist ? 'active' : ''}`}
-                            onClick={() => handleTherapistSelect(therapist)}
+                            onClick={() => !isLoggingOut && handleTherapistSelect(therapist)}
                           >
                             <i className="fas fa-user"></i> {therapist}
                           </div>
@@ -1013,7 +1053,8 @@ const handleActionClick = (action, patient) => {
                           <button 
                             key={index} 
                             className={`status-button ${selectedStatus === status ? 'active' : ''} ${status.toLowerCase()}`}
-                            onClick={() => handleStatusSelect(status)}
+                            onClick={() => !isLoggingOut && handleStatusSelect(status)}
+                            disabled={isLoggingOut}
                           >
                             {status === 'all' ? 'All Statuses' : status}
                             {status !== 'all' && (
@@ -1028,7 +1069,11 @@ const handleActionClick = (action, patient) => {
                   </div>
                   
                   <div className="filter-footer">
-                    <button className="clear-filters" onClick={handleClearFilters}>
+                    <button 
+                      className="clear-filters" 
+                      onClick={handleClearFilters}
+                      disabled={isLoggingOut}
+                    >
                       <i className="fas fa-times-circle"></i> Clear Filters
                     </button>
                     
@@ -1041,7 +1086,6 @@ const handleActionClick = (action, patient) => {
               )}
             </div>
           </div>
-          
           {/* Área de tabla de pacientes con vistas mejoradas */}
           <div className="patients-table-area">
             <div className="table-header">
@@ -1053,11 +1097,13 @@ const handleActionClick = (action, patient) => {
                   placeholder="Search patients by name, phone, or address..." 
                   value={patientSearchTerm}
                   onChange={handlePatientSearch}
+                  disabled={isLoggingOut}
                 />
                 {patientSearchTerm && (
                   <button 
                     className="clear-search" 
                     onClick={() => setPatientSearchTerm('')}
+                    disabled={isLoggingOut}
                   >
                     <i className="fas fa-times"></i>
                   </button>
@@ -1069,6 +1115,7 @@ const handleActionClick = (action, patient) => {
                   className={`view-btn ${currentView === 'list' ? 'active' : ''}`}
                   onClick={() => toggleView('list')}
                   title="List View"
+                  disabled={isLoggingOut}
                 >
                   <i className="fas fa-list"></i>
                 </button>
@@ -1076,6 +1123,7 @@ const handleActionClick = (action, patient) => {
                   className={`view-btn ${currentView === 'grid' ? 'active' : ''}`}
                   onClick={() => toggleView('grid')}
                   title="Grid View"
+                  disabled={isLoggingOut}
                 >
                   <i className="fas fa-th-large"></i>
                 </button>
@@ -1084,7 +1132,8 @@ const handleActionClick = (action, patient) => {
               <div className="table-actions" ref={filterMenuRef}>
                 <button 
                   className={`sort-button ${showFilterMenu ? 'active' : ''}`}
-                  onClick={() => setShowFilterMenu(!showFilterMenu)}
+                  onClick={() => !isLoggingOut && setShowFilterMenu(!showFilterMenu)}
+                  disabled={isLoggingOut}
                 >
                   <i className="fas fa-sort"></i> 
                   <span>
@@ -1092,7 +1141,7 @@ const handleActionClick = (action, patient) => {
                   </span>
                 </button>
                 
-                {showFilterMenu && (
+                {showFilterMenu && !isLoggingOut && (
                   <div className="filter-dropdown">
                     {sortOptions.map((option, index) => (
                       <div 
@@ -1150,6 +1199,7 @@ const handleActionClick = (action, patient) => {
                                 className="action-btn view" 
                                 title="View Details"
                                 onClick={() => handleActionClick('view', patient)}
+                                disabled={isLoggingOut}
                               >
                                 <i className="fas fa-eye"></i>
                               </button>
@@ -1157,6 +1207,7 @@ const handleActionClick = (action, patient) => {
                                 className="action-btn edit" 
                                 title="Edit Patient"
                                 onClick={() => handleActionClick('edit', patient)}
+                                disabled={isLoggingOut}
                               >
                                 <i className="fas fa-edit"></i>
                               </button>
@@ -1164,6 +1215,7 @@ const handleActionClick = (action, patient) => {
                                 className="action-btn notes" 
                                 title="Patient Notes"
                                 onClick={() => handleActionClick('notes', patient)}
+                                disabled={isLoggingOut}
                               >
                                 <i className="fas fa-clipboard"></i>
                               </button>
@@ -1177,7 +1229,11 @@ const handleActionClick = (action, patient) => {
                           <div className="no-results-message">
                             <i className="fas fa-search"></i>
                             <p>No patients found matching your search criteria</p>
-                            <button className="reset-search" onClick={handleClearFilters}>
+                            <button 
+                              className="reset-search" 
+                              onClick={handleClearFilters}
+                              disabled={isLoggingOut}
+                            >
                               Reset Search
                             </button>
                           </div>
@@ -1196,9 +1252,9 @@ const handleActionClick = (action, patient) => {
                       <PatientCard 
                         key={patient.id} 
                         patient={patient}
-                        onView={() => handleActionClick('view', patient)}
-                        onEdit={() => handleActionClick('edit', patient)}
-                        onNotes={() => handleActionClick('notes', patient)}
+                        onView={() => !isLoggingOut && handleActionClick('view', patient)}
+                        onEdit={() => !isLoggingOut && handleActionClick('edit', patient)}
+                        onNotes={() => !isLoggingOut && handleActionClick('notes', patient)}
                       />
                     ))}
                   </div>
@@ -1207,7 +1263,11 @@ const handleActionClick = (action, patient) => {
                     <div className="no-results-message">
                       <i className="fas fa-search"></i>
                       <p>No patients found matching your search criteria</p>
-                      <button className="reset-search" onClick={handleClearFilters}>
+                      <button 
+                        className="reset-search" 
+                        onClick={handleClearFilters}
+                        disabled={isLoggingOut}
+                      >
                         Reset Search
                       </button>
                     </div>
@@ -1223,7 +1283,7 @@ const handleActionClick = (action, patient) => {
                   <button 
                     className="pagination-btn" 
                     onClick={() => handlePageChange(activePage - 1)}
-                    disabled={activePage === 1}
+                    disabled={activePage === 1 || isLoggingOut}
                   >
                     <i className="fas fa-chevron-left"></i> Previous
                   </button>
@@ -1234,6 +1294,7 @@ const handleActionClick = (action, patient) => {
                         key={pageNumber}
                         className={`page-number ${activePage === pageNumber ? 'active' : ''}`}
                         onClick={() => handlePageChange(pageNumber)}
+                        disabled={isLoggingOut}
                       >
                         {pageNumber}
                       </button>
@@ -1243,7 +1304,7 @@ const handleActionClick = (action, patient) => {
                   <button 
                     className="pagination-btn"
                     onClick={() => handlePageChange(activePage + 1)}
-                    disabled={activePage === totalPages}
+                    disabled={activePage === totalPages || isLoggingOut}
                   >
                     Next <i className="fas fa-chevron-right"></i>
                   </button>
@@ -1258,19 +1319,21 @@ const handleActionClick = (action, patient) => {
         </div>
       </main>
       
-      {/* Asistente de IA */}
-      {showAIAssistant && <DevAIAssistant />}
+      {/* Asistente de IA - ocultarlo durante el logout */}
+      {showAIAssistant && !isLoggingOut && <AIAssistant />}
       
       {/* Botón de Acción Rápida Flotante con Menú */}
-      <div className="quick-action-btn">
-        <button className="add-patient-btn">
-          <i className="fas fa-plus"></i>
-          <span className="btn-tooltip">Add New Patient</span>
-        </button>
-      </div>
+      {!isLoggingOut && (
+        <div className="quick-action-btn">
+          <button className="add-patient-btn">
+            <i className="fas fa-plus"></i>
+            <span className="btn-tooltip">Add New Patient</span>
+          </button>
+        </div>
+      )}
       
       {/* Tour Rápido */}
-      {showQuickTour && (
+      {showQuickTour && !isLoggingOut && (
         <div className="quick-tour">
           <div className="tour-overlay" onClick={toggleQuickTour}></div>
           <div className="tour-modal">

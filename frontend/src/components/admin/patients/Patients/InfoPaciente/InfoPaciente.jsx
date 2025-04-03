@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../../../../../components/login/AuthContext'; // Importar el contexto de autenticación
 import logoImg from '../../../../../assets/LogoMHC.jpeg';
 import PremiumTabs from '../../PremiunTabs';
 import InfoGeneral from './InfoGeneral';
@@ -7,15 +8,21 @@ import InfoMedical from './InfoMedical';
 import DisciplinesSection from './DisciplinesSection';
 import ScheduleSection from './ScheduleSection';
 import CommentsSection from './CommentsSection';
+import LogoutAnimation from '../../../../../components/LogOut/LogOut'; // Importar componente de animación
 import '../../../../../styles/developer/Patients/InfoPaciente/InfoPaciente.scss';
 
 const AdminInfoPaciente = () => {
   const navigate = useNavigate();
   const { patientId } = useParams();
+  // Usar el contexto de autenticación para obtener el usuario actual
+  const { currentUser, logout } = useAuth();
+  
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [menuTransitioning, setMenuTransitioning] = useState(false);
   const [showMenuSwitch, setShowMenuSwitch] = useState(false);
   const [patientData, setPatientData] = useState(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const notificationCount = 5;
 
   const [loading, setLoading] = useState(true);
@@ -24,22 +31,36 @@ const AdminInfoPaciente = () => {
   // Añadir la referencia para userMenuRef
   const userMenuRef = useRef(null);
 
+  // Función para obtener iniciales del nombre
+  function getInitials(name) {
+    if (!name) return "U";
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  }
+  
+  // Datos de usuario del contexto de autenticación
   const userData = {
-    name: 'Luis Nava',
-    avatar: 'LN',
-    email: 'luis.nava@therapysync.com',
-    role: 'Developer',
+    name: currentUser?.fullname || currentUser?.username || 'Usuario',
+    avatar: getInitials(currentUser?.fullname || currentUser?.username || 'Usuario'),
+    email: currentUser?.email || 'usuario@ejemplo.com',
+    role: currentUser?.role || 'Usuario',
     status: 'online', // online, away, busy, offline
-    stats: {
-      ticketsResolved: 127,
-      avgResponseTime: '14m',
-      customerSatisfaction: '4.9/5',
-      availabilityToday: '92%'
-    },
-    quickActions: [
-      
-    ]
   };
+
+  // Detectar el tamaño de la pantalla para responsive
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    handleResize(); // Comprobar inicialmente
+    window.addEventListener('resize', handleResize);
+    
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Simular carga de datos del paciente
   useEffect(() => {
@@ -171,6 +192,20 @@ const AdminInfoPaciente = () => {
     fetchPatientData();
   }, [patientId]);
 
+  // Efecto para cerrar menú de usuario cuando se hace clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setShowUserMenu(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   // Efecto para mostrar el indicador de cambio de menú cuando el mouse está cerca del borde izquierdo
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -189,46 +224,65 @@ const AdminInfoPaciente = () => {
 
   // Manejar navegación al menú principal
   const handleMainMenuTransition = () => {
+    if (isLoggingOut) return; // No permitir navegación durante cierre de sesión
+    
     setMenuTransitioning(true);
     
+    // Extraer el rol base para la navegación
+    const baseRole = currentUser?.role?.split(' - ')[0].toLowerCase() || 'developer';
+    
     setTimeout(() => {
-      navigate('/homePage');
+      navigate(`/${baseRole}/homePage`);
     }, 300);
   };
 
   // Manejar cambio de pestaña
   const handleTabChange = (tab) => {
+    if (isLoggingOut) return; // No permitir navegación durante cierre de sesión
+    
+    // Extraer el rol base para la navegación
+    const baseRole = currentUser?.role?.split(' - ')[0].toLowerCase() || 'developer';
+    
     if (tab === 'Staffing') {
       setMenuTransitioning(true);
       
       setTimeout(() => {
-        navigate('/staffing');
+        navigate(`/${baseRole}/staffing`);
       }, 300);
     } else if (tab === 'Patients') {
       setMenuTransitioning(true);
       
       setTimeout(() => {
-        navigate('/patients');
+        navigate(`/${baseRole}/patients`);
       }, 300);
     }
   };
 
   // Manejar navegación a la página de pacientes
   const handlePatientsClick = () => {
+    if (isLoggingOut) return; // No permitir navegación durante cierre de sesión
+    
     setMenuTransitioning(true);
     
+    // Extraer el rol base para la navegación
+    const baseRole = currentUser?.role?.split(' - ')[0].toLowerCase() || 'developer';
+    
     setTimeout(() => {
-      navigate('/patients');
+      navigate(`/${baseRole}/patients`);
     }, 300);
   };
 
   // Función para cambiar entre secciones
   const handleSectionChange = (section) => {
+    if (isLoggingOut) return; // No permitir cambios durante cierre de sesión
+    
     setActiveSection(section);
   };
 
   // Función para actualizar datos médicos
   const handleMedicalUpdate = (updatedMedicalData) => {
+    if (isLoggingOut) return; // No permitir cambios durante cierre de sesión
+    
     setPatientData(prevData => ({
       ...prevData,
       medicalData: {
@@ -240,6 +294,8 @@ const AdminInfoPaciente = () => {
 
   // Función para actualizar datos de disciplinas
   const handleDisciplinesUpdate = (updatedDisciplinesData) => {
+    if (isLoggingOut) return; // No permitir cambios durante cierre de sesión
+    
     setPatientData(prevData => ({
       ...prevData,
       disciplinesData: {
@@ -249,16 +305,21 @@ const AdminInfoPaciente = () => {
     }));
   };
   
-  // Función para manejar el cierre de sesión
+  // Manejar cierre de sesión - con animación mejorada
   const handleLogout = () => {
-    // Implementa la lógica para cerrar sesión
-    console.log('Cerrando sesión...');
-    // Ejemplo: Redirigir a la página de login
-    setMenuTransitioning(true);
+    setIsLoggingOut(true);
+    setShowUserMenu(false);
     
-    setTimeout(() => {
-      navigate('/');
-    }, 300);
+    // Aplicar clase a document.body para efectos globales
+    document.body.classList.add('logging-out');
+  };
+  
+  // Callback para cuando la animación de cierre de sesión termine
+  const handleLogoutAnimationComplete = () => {
+    // Ejecutar el logout del contexto de autenticación
+    logout();
+    // Navegar a la página de inicio de sesión
+    navigate('/');
   };
 
   // Renderizar la sección activa
@@ -293,7 +354,15 @@ const AdminInfoPaciente = () => {
   };
 
   return (
-    <div className={`info-paciente ${menuTransitioning ? 'transitioning' : ''}`}>
+    <div className={`info-paciente ${menuTransitioning ? 'transitioning' : ''} ${isLoggingOut ? 'logging-out' : ''}`}>
+      {/* Animación de cierre de sesión - Mostrar solo cuando se está cerrando sesión */}
+      {isLoggingOut && (
+        <LogoutAnimation 
+          isMobile={isMobile} 
+          onAnimationComplete={handleLogoutAnimationComplete} 
+        />
+      )}
+      
       {/* Fondo parallax */}
       <div className="parallax-background">
         <div className="gradient-overlay"></div>
@@ -301,7 +370,7 @@ const AdminInfoPaciente = () => {
       </div>
       
       {/* Indicador flotante para cambiar al menú principal */}
-      {showMenuSwitch && (
+      {showMenuSwitch && !isLoggingOut && (
         <div 
           className="menu-switch-indicator"
           onClick={handleMainMenuTransition}
@@ -312,7 +381,7 @@ const AdminInfoPaciente = () => {
       )}
       
       {/* Header con logo y perfil */}
-      <header className="main-header">
+      <header className={`main-header ${isLoggingOut ? 'logging-out' : ''}`}>
         <div className="header-container">
           {/* Logo y navegación */}
           <div className="logo-container">
@@ -327,6 +396,7 @@ const AdminInfoPaciente = () => {
                 className="nav-button main-menu" 
                 onClick={handleMainMenuTransition}
                 title="Back to main menu"
+                disabled={isLoggingOut}
               >
                 <i className="fas fa-th-large"></i>
                 <span>Main Menu</span>
@@ -337,6 +407,7 @@ const AdminInfoPaciente = () => {
                 className="nav-button patients-menu" 
                 onClick={handlePatientsClick}
                 title="Patients Menu"
+                disabled={isLoggingOut}
               >
                 <i className="fas fa-user-injured"></i>
                 <span>Patients</span>
@@ -346,6 +417,7 @@ const AdminInfoPaciente = () => {
               <button 
                 className="nav-button info-menu active" 
                 title="Patient Information"
+                disabled={isLoggingOut}
               >
                 <i className="fas fa-info-circle"></i>
                 <span>Information</span>
@@ -363,7 +435,7 @@ const AdminInfoPaciente = () => {
           <div className="support-user-profile" ref={userMenuRef}>
             <div 
               className={`support-profile-button ${showUserMenu ? 'active' : ''}`} 
-              onClick={() => setShowUserMenu(!showUserMenu)}
+              onClick={() => !isLoggingOut && setShowUserMenu(!showUserMenu)}
               data-tooltip="Your profile and settings"
             >
               <div className="support-avatar">
@@ -380,7 +452,7 @@ const AdminInfoPaciente = () => {
             </div>
             
             {/* Menú desplegable del usuario mejorado con estadísticas */}
-            {showUserMenu && (
+            {showUserMenu && !isLoggingOut && (
               <div className="support-user-menu">
                 <div className="support-menu-header">
                   <div className="support-user-info">
@@ -483,7 +555,7 @@ const AdminInfoPaciente = () => {
       </header>
       
       {/* Contenido principal */}
-      <main className="info-paciente-content">
+      <main className={`info-paciente-content ${isLoggingOut ? 'fade-out' : ''}`}>
         <div className="info-container">
           {loading ? (
             <div className="loading-container">
@@ -519,30 +591,35 @@ const AdminInfoPaciente = () => {
                 <button 
                   className={`section-tab ${activeSection === 'general' ? 'active' : ''}`}
                   onClick={() => handleSectionChange('general')}
+                  disabled={isLoggingOut}
                 >
                   <i className="fas fa-user"></i> General
                 </button>
                 <button 
                   className={`section-tab ${activeSection === 'medical' ? 'active' : ''}`}
                   onClick={() => handleSectionChange('medical')}
+                  disabled={isLoggingOut}
                 >
                   <i className="fas fa-notes-medical"></i> Medical
                 </button>
                 <button 
                   className={`section-tab ${activeSection === 'disciplines' ? 'active' : ''}`}
                   onClick={() => handleSectionChange('disciplines')}
+                  disabled={isLoggingOut}
                 >
                   <i className="fas fa-user-md"></i> Disciplines
                 </button>
                 <button 
                   className={`section-tab ${activeSection === 'schedule' ? 'active' : ''}`}
                   onClick={() => handleSectionChange('schedule')}
+                  disabled={isLoggingOut}
                 >
                   <i className="fas fa-calendar-alt"></i> Schedule
                 </button>
                 <button 
                   className={`section-tab ${activeSection === 'comments' ? 'active' : ''}`}
                   onClick={() => handleSectionChange('comments')}
+                  disabled={isLoggingOut}
                 >
                   <i className="fas fa-comments"></i> Comments
                 </button>
@@ -558,12 +635,18 @@ const AdminInfoPaciente = () => {
       </main>
       
       {/* Botón de regresar flotante */}
-      <div className="quick-action-btn">
-        <button className="back-button" onClick={handlePatientsClick}>
-          <i className="fas fa-arrow-left"></i>
-          <span className="btn-tooltip">Back to Patients</span>
-        </button>
-      </div>
+      {!isLoggingOut && (
+        <div className="quick-action-btn">
+          <button 
+            className="back-button" 
+            onClick={handlePatientsClick}
+            disabled={isLoggingOut}
+          >
+            <i className="fas fa-arrow-left"></i>
+            <span className="btn-tooltip">Back to Patients</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../../components/login/AuthContext'; // Importar el contexto de autenticación
 import logoImg from '../../../../assets/LogoMHC.jpeg';
 import '../../../../styles/developer/Patients/Staffing/StaffingPage.scss';
 import PremiumTabs from '../Patients/PremiunTabs.jsx';
@@ -7,9 +8,12 @@ import StaffingManagerContainer from './StaffingManagerContainer';
 import AddStaffForm from './AddStaffForm';
 import StaffListComponent from './StaffListComponent';
 import StaffEditComponent from './StaffEditComponent';
+import LogoutAnimation from '../../../../components/LogOut/LogOut'; // Importar el componente de animación
 
 const TPStaffingPage = () => {
   const navigate = useNavigate();
+  const { currentUser, logout } = useAuth(); // Usar el contexto de autenticación
+  
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [menuTransitioning, setMenuTransitioning] = useState(false);
   const [showMenuSwitch, setShowMenuSwitch] = useState(false);
@@ -18,9 +22,41 @@ const TPStaffingPage = () => {
   const [showStaffList, setShowStaffList] = useState(false);
   const [showStaffEdit, setShowStaffEdit] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isMobile, setIsMobile] = useState(false); // Para responsive en LogoutAnimation
   
   // Referencias
   const userMenuRef = useRef(null);
+  
+  // Función para obtener iniciales del nombre
+  function getInitials(name) {
+    if (!name) return "U";
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  }
+  
+  // Usar datos de usuario del contexto de autenticación
+  const userData = {
+    name: currentUser?.fullname || currentUser?.username || 'Usuario',
+    avatar: getInitials(currentUser?.fullname || currentUser?.username || 'Usuario'),
+    email: currentUser?.email || 'usuario@ejemplo.com',
+    role: currentUser?.role || 'Usuario',
+    status: 'online', // online, away, busy, offline
+  };
+  
+  // Detectar el tamaño de la pantalla para responsive
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    handleResize(); // Comprobar inicialmente
+    window.addEventListener('resize', handleResize);
+    
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   // Efecto para cerrar menú de usuario al hacer clic fuera
   useEffect(() => {
@@ -54,26 +90,39 @@ const TPStaffingPage = () => {
   
   // Manejar navegación al menú principal
   const handleMainMenuTransition = () => {
+    if (isLoggingOut) return; // No permitir navegación durante cierre de sesión
+    
     setMenuTransitioning(true);
+    
+    // Extraer el rol base para la navegación
+    const baseRole = currentUser?.role?.split(' - ')[0].toLowerCase() || 'developer';
     
     // Simular animación de transición y luego navegar
     setTimeout(() => {
-      navigate('/homePage');
+      navigate(`/${baseRole}/homePage`);
     }, 300);
   };
   
   // Manejar cambio de pestaña
   const handleTabChange = (tab) => {
+    if (isLoggingOut) return; // No permitir navegación durante cierre de sesión
+    
     if (tab === 'Patients') {
       setMenuTransitioning(true);
+      
+      // Extraer el rol base para la navegación
+      const baseRole = currentUser?.role?.split(' - ')[0].toLowerCase() || 'developer';
+      
       setTimeout(() => {
-        navigate('/patients');
+        navigate(`/${baseRole}/patients`);
       }, 300);
     }
   };
   
   // Manejar selección de opción
   const handleOptionSelect = (option) => {
+    if (isLoggingOut) return; // No permitir cambios durante cierre de sesión
+    
     setSelectedOption(option);
     setShowAddStaffForm(false);
     setShowStaffList(false);
@@ -81,44 +130,40 @@ const TPStaffingPage = () => {
   };
 
   // Manejar el clic en Add New Staff
-  const handleAddStaffClick = () => {
+  const handleAddStaffClick = (e) => {
+    if (isLoggingOut) return; // No permitir cambios durante cierre de sesión
+    if (e) e.stopPropagation();
+    
     setSelectedOption('therapists');
     setShowAddStaffForm(true);
     setShowStaffList(false);
     setShowStaffEdit(false);
   };
 
+  // Manejar cierre de sesión - con animación mejorada
   const handleLogout = () => {
     setIsLoggingOut(true);
     setShowUserMenu(false);
     
-    // Después de que la animación se complete, redirigir al login
-    setTimeout(() => {
-      navigate('/');
-    }, 5000); // Tiempo ajustado para la animación mejorada
+    // Aplicar clase a document.body para efectos globales
+    document.body.classList.add('logging-out');
+  };
+  
+  // Callback para cuando la animación de cierre de sesión termine
+  const handleLogoutAnimationComplete = () => {
+    // Ejecutar el logout del contexto de autenticación
+    logout();
+    // Navegar a la página de inicio de sesión
+    navigate('/');
   };
 
   const notificationCount = 5; // Example value, replace with actual logic if needed
 
-  const userData = {
-    name: 'Luis Nava',
-    avatar: 'LN',
-    email: 'luis.nava@therapysync.com',
-    role: 'Developer',
-    status: 'online', // online, away, busy, offline
-    stats: {
-      ticketsResolved: 127,
-      avgResponseTime: '14m',
-      customerSatisfaction: '4.9/5',
-      availabilityToday: '92%'
-    },
-    quickActions: [
-      
-    ]
-  };
-
   // Manejar el clic en View All Staff
-  const handleViewAllStaffClick = () => {
+  const handleViewAllStaffClick = (e) => {
+    if (isLoggingOut) return; // No permitir cambios durante cierre de sesión
+    if (e) e.stopPropagation();
+    
     setSelectedOption('therapists');
     setShowStaffList(true);
     setShowAddStaffForm(false);
@@ -126,7 +171,10 @@ const TPStaffingPage = () => {
   };
 
   // Manejar el clic en Edit Existing Staff
-  const handleEditStaffClick = () => {
+  const handleEditStaffClick = (e) => {
+    if (isLoggingOut) return; // No permitir cambios durante cierre de sesión
+    if (e) e.stopPropagation();
+    
     setSelectedOption('therapists');
     setShowStaffEdit(true);
     setShowAddStaffForm(false);
@@ -135,6 +183,8 @@ const TPStaffingPage = () => {
 
   // Manejar cancelación del formulario
   const handleCancelForm = () => {
+    if (isLoggingOut) return; // No permitir cambios durante cierre de sesión
+    
     setShowAddStaffForm(false);
     setShowStaffList(false);
     setShowStaffEdit(false);
@@ -142,13 +192,23 @@ const TPStaffingPage = () => {
 
   // Manejar volver a opciones
   const handleBackToOptions = () => {
+    if (isLoggingOut) return; // No permitir cambios durante cierre de sesión
+    
     setShowStaffList(false);
     setShowAddStaffForm(false);
     setShowStaffEdit(false);
   };
 
   return (
-    <div className={`staffing-dashboard ${menuTransitioning ? 'transitioning' : ''}`}>
+    <div className={`staffing-dashboard ${menuTransitioning ? 'transitioning' : ''} ${isLoggingOut ? 'logging-out' : ''}`}>
+      {/* Animación de cierre de sesión - Mostrar solo cuando se está cerrando sesión */}
+      {isLoggingOut && (
+        <LogoutAnimation 
+          isMobile={isMobile} 
+          onAnimationComplete={handleLogoutAnimationComplete} 
+        />
+      )}
+      
       {/* Fondo parallax */}
       <div className="parallax-background">
         <div className="gradient-overlay"></div>
@@ -156,7 +216,7 @@ const TPStaffingPage = () => {
       </div>
       
       {/* Indicador flotante para cambiar al menú principal */}
-      {showMenuSwitch && (
+      {showMenuSwitch && !isLoggingOut && (
         <div 
           className="menu-switch-indicator"
           onClick={handleMainMenuTransition}
@@ -167,7 +227,7 @@ const TPStaffingPage = () => {
       )}
       
       {/* Header con logo y perfil */}
-      <header className="main-header">
+      <header className={`main-header ${isLoggingOut ? 'logging-out' : ''}`}>
         <div className="header-container">
           {/* Logo y navegación */}
           <div className="logo-container">
@@ -182,6 +242,7 @@ const TPStaffingPage = () => {
                 className="nav-button main-menu" 
                 onClick={handleMainMenuTransition}
                 title="Back to main menu"
+                disabled={isLoggingOut}
               >
                 <i className="fas fa-th-large"></i>
                 <span>Main Menu</span>
@@ -191,6 +252,7 @@ const TPStaffingPage = () => {
               <button 
                 className="nav-button staffing-menu active" 
                 title="Staffing Menu"
+                disabled={isLoggingOut}
               >
                 <i className="fas fa-user-md"></i>
                 <span>Staffing</span>
@@ -208,7 +270,7 @@ const TPStaffingPage = () => {
           <div className="support-user-profile" ref={userMenuRef}>
             <div 
               className={`support-profile-button ${showUserMenu ? 'active' : ''}`} 
-              onClick={() => setShowUserMenu(!showUserMenu)}
+              onClick={() => !isLoggingOut && setShowUserMenu(!showUserMenu)}
               data-tooltip="Your profile and settings"
             >
               <div className="support-avatar">
@@ -225,7 +287,7 @@ const TPStaffingPage = () => {
             </div>
             
             {/* Menú desplegable del usuario mejorado con estadísticas */}
-            {showUserMenu && (
+            {showUserMenu && !isLoggingOut && (
               <div className="support-user-menu">
                 <div className="support-menu-header">
                   <div className="support-user-info">
@@ -328,7 +390,7 @@ const TPStaffingPage = () => {
       </header>
       
       {/* Contenido principal */}
-      <main className="staffing-content">
+      <main className={`staffing-content ${isLoggingOut ? 'fade-out' : ''}`}>
         <div className="staffing-container">
           {/* Header del dashboard */}
           <div className="staffing-header">
@@ -338,12 +400,13 @@ const TPStaffingPage = () => {
                 Manage your therapy team, track performance and optimize schedules
               </p>
               <div className="header-actions">
-                <button className="header-action-btn">
+                <button className="header-action-btn" disabled={isLoggingOut}>
                   <i className="fas fa-info-circle"></i> Quick Tour
                 </button>
                 <button 
                   className="header-action-btn"
                   onClick={handleAddStaffClick}
+                  disabled={isLoggingOut}
                 >
                   <i className="fas fa-plus"></i> New Staff Member
                 </button>
@@ -372,16 +435,18 @@ const TPStaffingPage = () => {
                 <h3>Therapists & Office Staff</h3>
                 <p>Add or edit therapist and office staff users</p>
                 <div className="option-actions">
-                  <button className="option-btn" onClick={(e) => {
-                    e.stopPropagation();
-                    handleViewAllStaffClick();
-                  }}>
+                  <button 
+                    className="option-btn" 
+                    onClick={(e) => handleViewAllStaffClick(e)}
+                    disabled={isLoggingOut}
+                  >
                     <i className="fas fa-eye"></i> View All
                   </button>
-                  <button className="option-btn" onClick={(e) => {
-                    e.stopPropagation();
-                    handleAddStaffClick();
-                  }}>
+                  <button 
+                    className="option-btn" 
+                    onClick={(e) => handleAddStaffClick(e)}
+                    disabled={isLoggingOut}
+                  >
                     <i className="fas fa-plus"></i> Add New
                   </button>
                 </div>
@@ -403,10 +468,10 @@ const TPStaffingPage = () => {
                 <h3>Scheduling & Assignments</h3>
                 <p>Manage visit schedules and therapist assignments</p>
                 <div className="option-actions">
-                  <button className="option-btn">
+                  <button className="option-btn" disabled={isLoggingOut}>
                     <i className="fas fa-calendar-week"></i> View Calendar
                   </button>
-                  <button className="option-btn">
+                  <button className="option-btn" disabled={isLoggingOut}>
                     <i className="fas fa-tasks"></i> Manage Assignments
                   </button>
                 </div>
@@ -493,13 +558,25 @@ const TPStaffingPage = () => {
                       
                       {selectedOption === 'therapists' && (
                         <div className="action-buttons">
-                          <button className="action-btn add" onClick={handleAddStaffClick}>
+                          <button 
+                            className="action-btn add" 
+                            onClick={(e) => handleAddStaffClick(e)}
+                            disabled={isLoggingOut}
+                          >
                             <i className="fas fa-user-plus"></i> Add New Staff
                           </button>
-                          <button className="action-btn view" onClick={handleViewAllStaffClick}>
+                          <button 
+                            className="action-btn view" 
+                            onClick={(e) => handleViewAllStaffClick(e)}
+                            disabled={isLoggingOut}
+                          >
                             <i className="fas fa-list"></i> View All Staff
                           </button>
-                          <button className="action-btn edit" onClick={handleEditStaffClick}>
+                          <button 
+                            className="action-btn edit" 
+                            onClick={(e) => handleEditStaffClick(e)}
+                            disabled={isLoggingOut}
+                          >
                             <i className="fas fa-user-edit"></i> Edit Existing Staff
                           </button>
                         </div>
@@ -507,13 +584,13 @@ const TPStaffingPage = () => {
                       
                       {selectedOption === 'scheduling' && (
                         <div className="action-buttons">
-                          <button className="action-btn calendar">
+                          <button className="action-btn calendar" disabled={isLoggingOut}>
                             <i className="fas fa-calendar-plus"></i> Create New Schedule
                           </button>
-                          <button className="action-btn view">
+                          <button className="action-btn view" disabled={isLoggingOut}>
                             <i className="fas fa-calendar-week"></i> View Calendar
                           </button>
-                          <button className="action-btn assign">
+                          <button className="action-btn assign" disabled={isLoggingOut}>
                             <i className="fas fa-user-check"></i> Assign Patients
                           </button>
                         </div>
@@ -536,12 +613,18 @@ const TPStaffingPage = () => {
       </main>
       
       {/* Botón de Acción Rápida Flotante */}
-      <div className="quick-action-btn">
-        <button className="add-staff-btn" onClick={handleAddStaffClick}>
-          <i className="fas fa-plus"></i>
-          <span className="btn-tooltip">Add New Staff</span>
-        </button>
-      </div>
+      {!isLoggingOut && (
+        <div className="quick-action-btn">
+          <button 
+            className="add-staff-btn" 
+            onClick={(e) => handleAddStaffClick(e)}
+            disabled={isLoggingOut}
+          >
+            <i className="fas fa-plus"></i>
+            <span className="btn-tooltip">Add New Staff</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 };

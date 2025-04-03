@@ -1,6 +1,6 @@
-// RoleBasedRoute.jsx
+// components/login/RoleBasedRoute.jsx
 import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 
 /**
@@ -9,6 +9,7 @@ import { useAuth } from './AuthContext';
  */
 const RoleBasedRoute = ({ allowedRoles }) => {
   const { currentUser, isAuthenticated } = useAuth();
+  const location = useLocation();
   
   // Si no está autenticado, esto no debería ocurrir porque ProtectedRoute
   // ya debería haberlo redirigido, pero por seguridad comprobamos de nuevo
@@ -18,8 +19,11 @@ const RoleBasedRoute = ({ allowedRoles }) => {
   
   // Verificar si el usuario tiene el rol adecuado
   if (!allowedRoles.includes(currentUser.role)) {
+    // Obtener el rol base (para manejar roles compuestos como "PT - Administrator")
+    const baseRole = currentUser.role.split(' - ')[0];
+    
     // Redirigir a la ruta principal basada en su rol
-    return <Navigate to={`/${currentUser.role.toLowerCase()}/homePage`} replace />;
+    return <Navigate to={`/${baseRole.toLowerCase()}/homePage`} replace />;
   }
   
   // Si tiene permiso, permitir acceso a la ruta

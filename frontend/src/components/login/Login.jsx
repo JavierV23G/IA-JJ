@@ -2,8 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthLoadingModal from './AuthLoadingModal';
+import AccountLockoutModal from './AccountLockoutModal'; // Nuevo componente
 import logoImg from '../../assets/LogoMHC.jpeg';
 import { useAuth } from './AuthContext';
+import AccountLockoutService from './AccountLockoutService'; // Nuevo servicio
 
 const Login = ({ onForgotPassword }) => {
   const navigate = useNavigate();
@@ -25,6 +27,13 @@ const Login = ({ onForgotPassword }) => {
     isOpen: false,
     status: 'loading',
     message: ''
+  });
+  
+  // Estado para el modal de bloqueo de cuenta
+  const [lockoutModal, setLockoutModal] = useState({
+    isOpen: false,
+    username: '',
+    remainingTime: 0
   });
 
   // Lista de credenciales válidas con datos completos (solo en el código, no en la UI)
@@ -83,6 +92,17 @@ const Login = ({ onForgotPassword }) => {
       documents: "ID-54321",
       zip_code: "90211",
       birth_date: "1985-10-20"
+    },
+    {
+      username: "Cohen1", 
+      password: "Cohen12*",
+      fullname: "Cohen N",
+      email: "Cohen@example.com",
+      role: "Administrator",
+      contact_number: "555-987-6543",
+      documents: "ID-54321",
+      zip_code: "90211",
+      birth_date: "1985-10-20"
     }
   ];
 
@@ -95,6 +115,18 @@ const Login = ({ onForgotPassword }) => {
         username: savedUsername
       }));
       setRememberMe(true);
+    }
+    
+    // Verificar si hay un bloqueo activo para el usuario guardado
+    if (savedUsername) {
+      const lockStatus = AccountLockoutService.checkAccountLocked(savedUsername);
+      if (lockStatus.isLocked) {
+        setLockoutModal({
+          isOpen: true,
+          username: savedUsername,
+          remainingTime: lockStatus.remainingTime
+        });
+      }
     }
   }, []);
 
@@ -111,6 +143,18 @@ const Login = ({ onForgotPassword }) => {
         ...errors,
         [name]: false
       });
+    }
+    
+    // Si el usuario cambia el nombre de usuario, verificar bloqueos
+    if (name === 'username' && value) {
+      const lockStatus = AccountLockoutService.checkAccountLocked(value);
+      if (lockStatus.isLocked) {
+        setLockoutModal({
+          isOpen: true,
+          username: value,
+          remainingTime: lockStatus.remainingTime
+        });
+      }
     }
   };
 
@@ -166,12 +210,31 @@ const Login = ({ onForgotPassword }) => {
       isOpen: false
     });
   };
+  
+  // Función para cerrar el modal de bloqueo
+  const closeLockoutModal = () => {
+    setLockoutModal({
+      ...lockoutModal,
+      isOpen: false
+    });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     
     // Validar el formulario
     if (!validateForm()) {
+      return;
+    }
+    
+    // Verificar si la cuenta está bloqueada
+    const lockStatus = AccountLockoutService.checkAccountLocked(formData.username);
+    if (lockStatus.isLocked) {
+      setLockoutModal({
+        isOpen: true,
+        username: formData.username,
+        remainingTime: lockStatus.remainingTime
+      });
       return;
     }
     
@@ -182,8 +245,16 @@ const Login = ({ onForgotPassword }) => {
     
     // Si las credenciales no son válidas, mostrar error
     if (!user) {
-      showError('username', "Invalid username or password");
-      showError('password', "Invalid username or password");
+      // Registrar intento fallido
+      const lockoutStatus = AccountLockoutService.recordFailedAttempt(formData.username);
+      
+      // Mostrar mensaje de error con intentos restantes
+      const errorMessage = lockoutStatus.isLocked 
+        ? "Account locked due to too many failed attempts" 
+        : `Invalid username or password. ${lockoutStatus.attemptsRemaining} attempts remaining before lockout.`;
+      
+      showError('username', errorMessage);
+      showError('password', errorMessage);
       
       // Efecto visual para errores
       document.querySelectorAll(".login__input").forEach(input => {
@@ -193,8 +264,20 @@ const Login = ({ onForgotPassword }) => {
         }, 500);
       });
       
+      // Si la cuenta ha sido bloqueada, mostrar el modal de bloqueo
+      if (lockoutStatus.isLocked) {
+        setLockoutModal({
+          isOpen: true,
+          username: formData.username,
+          remainingTime: lockoutStatus.remainingTime
+        });
+      }
+      
       return;
     }
+    
+    // Credenciales correctas: registrar inicio de sesión exitoso
+    AccountLockoutService.recordSuccessfulLogin(formData.username);
     
     // Manejar "Remember Me"
     if (rememberMe) {
@@ -222,7 +305,8 @@ const Login = ({ onForgotPassword }) => {
         contact_number: user.contact_number,
         documents: user.documents,
         zip_code: user.zip_code,
-        birth_date: user.birth_date
+        birth_date: user.birth_date,
+        last_login: new Date().toISOString()
       };
       
       // Guardar datos en el contexto de autenticación
@@ -339,6 +423,14 @@ const Login = ({ onForgotPassword }) => {
         status={authModal.status}
         message={authModal.message}
         onClose={closeAuthModal}
+      />
+      
+      {/* Modal de bloqueo de cuenta */}
+      <AccountLockoutModal
+        isOpen={lockoutModal.isOpen}
+        username={lockoutModal.username}
+        remainingTime={lockoutModal.remainingTime}
+        onClose={closeLockoutModal}
       />
     </>
   );

@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../components/login/AuthContext'; // Importar el contexto de autenticación
 import '../../../styles/developer/support/SupportHeader.scss';
 import logoImg from '../../../assets/LogoMHC.jpeg';
+import LogoutAnimation from '../../../components/LogOut/LogOut'; // Importar componente de animación
 
 const AdminSupportHeader = ({ 
   activeSection, 
@@ -11,12 +13,17 @@ const AdminSupportHeader = ({
   notificationCount 
 }) => {
   const navigate = useNavigate();
+  const { currentUser, logout } = useAuth(); // Usar el contexto de autenticación
+  
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [headerGlow, setHeaderGlow] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [searchFocus, setSearchFocus] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  
   const userMenuRef = useRef(null);
   const notificationsRef = useRef(null);
   const mobileMenuRef = useRef(null);
@@ -145,23 +152,42 @@ const AdminSupportHeader = ({
     }
   ];
   
-  // Datos de usuario enriquecidos
+  // Función para obtener iniciales del nombre
+  function getInitials(name) {
+    if (!name) return "U";
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  }
+  
+  // Usar datos de usuario del contexto de autenticación
   const userData = {
-    name: 'Luis Nava',
-    avatar: 'LN',
-    email: 'luis.nava@therapysync.com',
-    role: 'Developer',
+    name: currentUser?.fullname || currentUser?.username || 'Usuario',
+    avatar: getInitials(currentUser?.fullname || currentUser?.username || 'Usuario'),
+    email: currentUser?.email || 'usuario@ejemplo.com',
+    role: currentUser?.role || 'Usuario',
     status: 'online', // online, away, busy, offline
     stats: {
       ticketsResolved: 127,
       avgResponseTime: '14m',
       customerSatisfaction: '4.9/5',
       availabilityToday: '92%'
-    },
-    quickActions: [
-      
-    ]
+    }
   };
+  
+  // Detectar el tamaño de la pantalla para responsive
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    handleResize(); // Comprobar inicialmente
+    window.addEventListener('resize', handleResize);
+    
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   // Efecto para activar el brillo del header al estar en la parte superior
   useEffect(() => {
@@ -207,15 +233,31 @@ const AdminSupportHeader = ({
     }
   }, [showSearch]);
   
-  // Manejar el cierre de sesión
+  // Manejar cierre de sesión - con animación mejorada
   const handleLogout = () => {
+    setIsLoggingOut(true);
     setShowUserMenu(false);
+    
+    // Aplicar clase a document.body para efectos globales
+    document.body.classList.add('logging-out');
+  };
+  
+  // Callback para cuando la animación de cierre de sesión termine
+  const handleLogoutAnimationComplete = () => {
+    // Ejecutar el logout del contexto de autenticación
+    logout();
+    // Navegar a la página de inicio de sesión
     navigate('/');
   };
   
   // Manejar navegación al home
   const handleHomeClick = () => {
-    navigate('/homepage');
+    if (isLoggingOut) return; // No permitir navegación durante cierre de sesión
+    
+    // Extraer el rol base para la navegación
+    const baseRole = currentUser?.role?.split(' - ')[0].toLowerCase() || 'developer';
+    
+    navigate(`/${baseRole}/homePage`);
   };
   
   // Renderizar icono según tipo de notificación
@@ -256,6 +298,8 @@ const AdminSupportHeader = ({
   
   // Manejar nuevas notificaciones
   const handleMarkAllRead = () => {
+    if (isLoggingOut) return; // No permitir acciones durante cierre de sesión
+    
     // Simular marcado de todas las notificaciones como leídas
     console.log('Marked all notifications as read');
     // Aquí normalmente actualizarías el estado y/o enviarías una petición al backend
@@ -263,6 +307,8 @@ const AdminSupportHeader = ({
   
   // Manejar toggle de búsqueda en móvil
   const toggleSearch = () => {
+    if (isLoggingOut) return; // No permitir acciones durante cierre de sesión
+    
     setShowSearch(!showSearch);
     if (!showSearch && searchInputRef.current) {
       setTimeout(() => {
@@ -283,539 +329,556 @@ const AdminSupportHeader = ({
   };
   
   return (
-    <header className={`support-header ${headerGlow ? 'glow-effect' : ''}`}>
-      <div className="support-header-container">
-        {/* Logo mejorado con efecto hover */}
-        <div className="support-logo-container" onClick={handleHomeClick}>
-          <div className="support-logo-glow"></div>
-          <img src={logoImg} alt="TherapySync Logo" className="support-logo" />
-          <div className="support-logo-text">
-            <span className="logo-text-primary">Support</span>
-            <span className="logo-text-secondary">Center</span>
-          </div>
-        </div>
-        
-        {/* Toggle para menú móvil con animación */}
-        <button 
-          className="mobile-menu-toggle" 
-          onClick={() => setShowMobileMenu(!showMobileMenu)}
-          aria-label="Toggle mobile menu"
-        >
-          <i className={`fas ${showMobileMenu ? 'fa-times' : 'fa-bars'}`}></i>
-        </button>
-        
-        {/* Navegación principal con indicadores de actividad y tooltips */}
-        <nav className={`support-navigation ${showMobileMenu ? 'mobile-active' : ''}`} ref={mobileMenuRef}>
-          {menuOptions.map((option) => (
-            <div 
-              key={option.id}
-              className={`support-nav-item ${activeSection === option.id ? 'active' : ''}`}
-              onClick={() => {
-                onSectionChange(option.id);
-                setShowMobileMenu(false);
-              }}
-              data-tooltip={option.description}
-            >
-              <div className="nav-item-content">
-                <i className={`fas ${option.icon}`}></i>
-                <div className="nav-item-text">
-                  <span className="nav-item-name">{option.name}</span>
-                  <span className="nav-item-subtitle">{option.subtitle}</span>
-                </div>
-                {renderMenuBadge(option.badge)}
-              </div>
-              
-              {activeSection === option.id && (
-                <div className="active-indicator"></div>
-              )}
+    <>
+      {/* Animación de cierre de sesión - Mostrar solo cuando se está cerrando sesión */}
+      {isLoggingOut && (
+        <LogoutAnimation 
+          isMobile={isMobile} 
+          onAnimationComplete={handleLogoutAnimationComplete} 
+        />
+      )}
+      
+      <header className={`support-header ${headerGlow ? 'glow-effect' : ''} ${isLoggingOut ? 'logging-out' : ''}`}>
+        <div className="support-header-container">
+          {/* Logo mejorado con efecto hover */}
+          <div className="support-logo-container" onClick={handleHomeClick}>
+            <div className="support-logo-glow"></div>
+            <img src={logoImg} alt="TherapySync Logo" className="support-logo" />
+            <div className="support-logo-text">
+              <span className="logo-text-primary">Support</span>
+              <span className="logo-text-secondary">Center</span>
             </div>
-          ))}
-        </nav>
-        
-        {/* Búsqueda y herramientas mejoradas */}
-        <div className="support-tools">
-          {/* Búsqueda mejorada - versión escritorio con sugerencias */}
-          <div 
-            className={`support-search desktop-search ${searchFocus ? 'focus' : ''}`}
-            ref={searchRef}
-          >
-            <i className="fas fa-search"></i>
-            <input 
-              type="text" 
-              placeholder="Search tickets, articles, users..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => setSearchFocus(true)}
-              onBlur={() => setSearchFocus(false)}
-              ref={searchInputRef}
-            />
-            {searchQuery && (
-              <button 
-                className="search-clear" 
-                onClick={() => setSearchQuery('')}
-                aria-label="Clear search"
-              >
-                <i className="fas fa-times"></i>
-              </button>
-            )}
-            
-            {/* Sugerencias de búsqueda - aparecen cuando hay focus y texto */}
-            {searchFocus && searchQuery && (
-              <div className="search-suggestions">
-                <div className="suggestion-category">
-                  <div className="category-title">Tickets</div>
-                  <div className="suggestion-item">
-                    <i className="fas fa-ticket-alt"></i>
-                    <span>Search for "{searchQuery}" in tickets</span>
-                  </div>
-                  <div className="suggestion-item">
-                    <i className="fas fa-tag"></i>
-                    <span>Tickets with tag: {searchQuery}</span>
-                  </div>
-                </div>
-                <div className="suggestion-category">
-                  <div className="category-title">Knowledge Base</div>
-                  <div className="suggestion-item">
-                    <i className="fas fa-file-alt"></i>
-                    <span>Articles containing "{searchQuery}"</span>
-                  </div>
-                </div>
-                <div className="suggestion-category">
-                  <div className="category-title">Users</div>
-                  <div className="suggestion-item">
-                    <i className="fas fa-user"></i>
-                    <span>Team members: {searchQuery}</span>
-                  </div>
-                  <div className="suggestion-item">
-                    <i className="fas fa-users"></i>
-                    <span>Customers: {searchQuery}</span>
-                  </div>
-                </div>
-                <div className="suggestion-footer">
-                  <span>Press Enter for full search results</span>
-                </div>
-              </div>
-            )}
           </div>
           
-          {/* Búsqueda - toggle móvil */}
+          {/* Toggle para menú móvil con animación */}
           <button 
-            className="header-search-toggle"
-            onClick={toggleSearch}
-            aria-label="Toggle search"
+            className="mobile-menu-toggle" 
+            onClick={() => !isLoggingOut && setShowMobileMenu(!showMobileMenu)}
+            aria-label="Toggle mobile menu"
+            disabled={isLoggingOut}
           >
-            <i className="fas fa-search"></i>
+            <i className={`fas ${showMobileMenu ? 'fa-times' : 'fa-bars'}`}></i>
           </button>
           
-          {/* Búsqueda - versión móvil expandible */}
-          {showSearch && (
-            <div className="mobile-search-overlay">
-              <div className="mobile-search-container">
-                <i className="fas fa-search"></i>
-                <input 
-                  type="text" 
-                  placeholder="Search tickets, articles, users..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  ref={searchInputRef}
-                />
+          {/* Navegación principal con indicadores de actividad y tooltips */}
+          <nav className={`support-navigation ${showMobileMenu ? 'mobile-active' : ''}`} ref={mobileMenuRef}>
+            {menuOptions.map((option) => (
+              <div 
+                key={option.id}
+                className={`support-nav-item ${activeSection === option.id ? 'active' : ''}`}
+                onClick={() => {
+                  if (isLoggingOut) return; // No permitir navegación durante cierre de sesión
+                  onSectionChange(option.id);
+                  setShowMobileMenu(false);
+                }}
+                data-tooltip={option.description}
+              >
+                <div className="nav-item-content">
+                  <i className={`fas ${option.icon}`}></i>
+                  <div className="nav-item-text">
+                    <span className="nav-item-name">{option.name}</span>
+                    <span className="nav-item-subtitle">{option.subtitle}</span>
+                  </div>
+                  {renderMenuBadge(option.badge)}
+                </div>
+                
+                {activeSection === option.id && (
+                  <div className="active-indicator"></div>
+                )}
+              </div>
+            ))}
+          </nav>
+          
+          {/* Búsqueda y herramientas mejoradas */}
+          <div className="support-tools">
+            {/* Búsqueda mejorada - versión escritorio con sugerencias */}
+            <div 
+              className={`support-search desktop-search ${searchFocus ? 'focus' : ''}`}
+              ref={searchRef}
+            >
+              <i className="fas fa-search"></i>
+              <input 
+                type="text" 
+                placeholder="Search tickets, articles, users..." 
+                value={searchQuery}
+                onChange={(e) => !isLoggingOut && setSearchQuery(e.target.value)}
+                onFocus={() => !isLoggingOut && setSearchFocus(true)}
+                onBlur={() => !isLoggingOut && setSearchFocus(false)}
+                ref={searchInputRef}
+                disabled={isLoggingOut}
+              />
+              {searchQuery && (
                 <button 
-                  className="mobile-search-close" 
-                  onClick={() => setShowSearch(false)}
-                  aria-label="Close search"
+                  className="search-clear" 
+                  onClick={() => !isLoggingOut && setSearchQuery('')}
+                  aria-label="Clear search"
+                  disabled={isLoggingOut}
                 >
                   <i className="fas fa-times"></i>
                 </button>
-              </div>
+              )}
               
-              {/* Sugerencias de búsqueda móvil */}
-              {searchQuery && (
-                <div className="mobile-search-suggestions">
-                  <div className="suggestions-title">Quick Suggestions</div>
-                  <div className="suggestion-item">
-                    <i className="fas fa-ticket-alt"></i>
-                    <span>Search tickets: {searchQuery}</span>
+              {/* Sugerencias de búsqueda - aparecen cuando hay focus y texto */}
+              {searchFocus && searchQuery && !isLoggingOut && (
+                <div className="search-suggestions">
+                  <div className="suggestion-category">
+                    <div className="category-title">Tickets</div>
+                    <div className="suggestion-item">
+                      <i className="fas fa-ticket-alt"></i>
+                      <span>Search for "{searchQuery}" in tickets</span>
+                    </div>
+                    <div className="suggestion-item">
+                      <i className="fas fa-tag"></i>
+                      <span>Tickets with tag: {searchQuery}</span>
+                    </div>
                   </div>
-                  <div className="suggestion-item">
-                    <i className="fas fa-file-alt"></i>
-                    <span>Search articles: {searchQuery}</span>
+                  <div className="suggestion-category">
+                    <div className="category-title">Knowledge Base</div>
+                    <div className="suggestion-item">
+                      <i className="fas fa-file-alt"></i>
+                      <span>Articles containing "{searchQuery}"</span>
+                    </div>
                   </div>
-                  <div className="suggestion-item">
-                    <i className="fas fa-users"></i>
-                    <span>Search users: {searchQuery}</span>
+                  <div className="suggestion-category">
+                    <div className="category-title">Users</div>
+                    <div className="suggestion-item">
+                      <i className="fas fa-user"></i>
+                      <span>Team members: {searchQuery}</span>
+                    </div>
+                    <div className="suggestion-item">
+                      <i className="fas fa-users"></i>
+                      <span>Customers: {searchQuery}</span>
+                    </div>
                   </div>
-                  <div className="suggestion-item">
-                    <i className="fas fa-tags"></i>
-                    <span>Search tags: {searchQuery}</span>
+                  <div className="suggestion-footer">
+                    <span>Press Enter for full search results</span>
                   </div>
                 </div>
               )}
             </div>
-          )}
-          
-          {/* Botón de ayuda con tooltip */}
-          <button 
-            className="support-help-button" 
-            aria-label="Get help"
-            data-tooltip="Access help resources and guides"
-          >
-            <i className="fas fa-question-circle"></i>
-          </button>
-          
-          {/* Notificaciones mejoradas con categorías y filtros */}
-          <div className="support-notifications" ref={notificationsRef}>
+            
+            {/* Búsqueda - toggle móvil */}
             <button 
-              className={`notifications-button ${showNotifications ? 'active' : ''}`}
-              onClick={() => setShowNotifications(!showNotifications)}
-              aria-label={`Notifications - ${notificationCount} unread`}
-              data-tooltip={`${notificationCount} unread notifications`}
+              className="header-search-toggle"
+              onClick={toggleSearch}
+              aria-label="Toggle search"
+              disabled={isLoggingOut}
             >
-              <i className="fas fa-bell"></i>
-              {notificationCount > 0 && (
-                <span className="notifications-badge">{notificationCount}</span>
-              )}
+              <i className="fas fa-search"></i>
             </button>
             
-            {/* Panel de notificaciones mejorado con filtros y categorías */}
-            {showNotifications && (
-              <div className="notifications-panel">
-                <div className="notifications-header">
-                  <h3>Notifications</h3>
+            {/* Búsqueda - versión móvil expandible */}
+            {showSearch && !isLoggingOut && (
+              <div className="mobile-search-overlay">
+                <div className="mobile-search-container">
+                  <i className="fas fa-search"></i>
+                  <input 
+                    type="text" 
+                    placeholder="Search tickets, articles, users..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    ref={searchInputRef}
+                    disabled={isLoggingOut}
+                  />
                   <button 
-                    className="mark-all-read"
-                    onClick={handleMarkAllRead}
+                    className="mobile-search-close" 
+                    onClick={() => setShowSearch(false)}
+                    aria-label="Close search"
+                    disabled={isLoggingOut}
                   >
-                    <i className="fas fa-check-double"></i>
-                    <span>Mark all as read</span>
+                    <i className="fas fa-times"></i>
                   </button>
                 </div>
                 
-                {/* Filtros de notificaciones */}
-                <div className="notifications-filters">
-                  <button className="filter-btn active">
-                    <span>All</span>
-                    <div className="filter-count">{notifications.length}</div>
-                  </button>
-                  <button className="filter-btn">
-                    <span>Unread</span>
-                    <div className="filter-count">{notifications.filter(n => !n.read).length}</div>
-                  </button>
-                  <button className="filter-btn">
-                    <span>Tickets</span>
-                    <div className="filter-count">{notifications.filter(n => n.type === 'ticket' || n.type === 'response' || n.type === 'overdue').length}</div>
-                  </button>
-                  <button className="filter-btn">
-                    <span>System</span>
-                    <div className="filter-count">{notifications.filter(n => n.type === 'system').length}</div>
-                  </button>
-                </div>
-                
-                <div className="notifications-list">
-                  {notifications.map((notification) => (
-                    <div 
-                      key={notification.id} 
-                      className={`notification-item ${!notification.read ? 'unread' : ''}`}
+                {/* Sugerencias de búsqueda móvil */}
+                {searchQuery && (
+                  <div className="mobile-search-suggestions">
+                    <div className="suggestions-title">Quick Suggestions</div>
+                    <div className="suggestion-item">
+                      <i className="fas fa-ticket-alt"></i>
+                      <span>Search tickets: {searchQuery}</span>
+                    </div>
+                    <div className="suggestion-item">
+                      <i className="fas fa-file-alt"></i>
+                      <span>Search articles: {searchQuery}</span>
+                    </div>
+                    <div className="suggestion-item">
+                      <i className="fas fa-users"></i>
+                      <span>Search users: {searchQuery}</span>
+                    </div>
+                    <div className="suggestion-item">
+                      <i className="fas fa-tags"></i>
+                      <span>Search tags: {searchQuery}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Botón de ayuda con tooltip */}
+            <button 
+              className="support-help-button" 
+              aria-label="Get help"
+              data-tooltip="Access help resources and guides"
+              disabled={isLoggingOut}
+            >
+              <i className="fas fa-question-circle"></i>
+            </button>
+            
+            {/* Notificaciones mejoradas con categorías y filtros */}
+            <div className="support-notifications" ref={notificationsRef}>
+              <button 
+                className={`notifications-button ${showNotifications ? 'active' : ''}`}
+                onClick={() => !isLoggingOut && setShowNotifications(!showNotifications)}
+                aria-label={`Notifications - ${notificationCount} unread`}
+                data-tooltip={`${notificationCount} unread notifications`}
+                disabled={isLoggingOut}
+              >
+                <i className="fas fa-bell"></i>
+                {notificationCount > 0 && (
+                  <span className="notifications-badge">{notificationCount}</span>
+                )}
+              </button>
+              
+              {/* Panel de notificaciones mejorado con filtros y categorías */}
+              {showNotifications && !isLoggingOut && (
+                <div className="notifications-panel">
+                  <div className="notifications-header">
+                    <h3>Notifications</h3>
+                    <button 
+                      className="mark-all-read"
+                      onClick={handleMarkAllRead}
+                      disabled={isLoggingOut}
                     >
+                      <i className="fas fa-check-double"></i>
+                      <span>Mark all as read</span>
+                    </button>
+                  </div>
+                  
+                  {/* Filtros de notificaciones */}
+                  <div className="notifications-filters">
+                    <button className="filter-btn active" disabled={isLoggingOut}>
+                      <span>All</span>
+                      <div className="filter-count">{notifications.length}</div>
+                    </button>
+                    <button className="filter-btn" disabled={isLoggingOut}>
+                      <span>Unread</span>
+                      <div className="filter-count">{notifications.filter(n => !n.read).length}</div>
+                    </button>
+                    <button className="filter-btn" disabled={isLoggingOut}>
+                      <span>Tickets</span>
+                      <div className="filter-count">{notifications.filter(n => n.type === 'ticket' || n.type === 'response' || n.type === 'overdue').length}</div>
+                    </button>
+                    <button className="filter-btn" disabled={isLoggingOut}>
+                      <span>System</span>
+                      <div className="filter-count">{notifications.filter(n => n.type === 'system').length}</div>
+                    </button>
+                  </div>
+                  
+                  <div className="notifications-list">
+                    {notifications.map((notification) => (
                       <div 
-                        className="notification-icon" 
-                        style={{ background: getNotificationColor(notification.type) }}
+                        key={notification.id} 
+                        className={`notification-item ${!notification.read ? 'unread' : ''}`}
                       >
-                        <i className={`fas ${getNotificationIcon(notification.type)}`}></i>
-                      </div>
-                      
-                      <div className="notification-content">
-                        <div className="notification-header">
-                          <div className="notification-title">{notification.title}</div>
-                          {notification.priority && (
-                            <div 
-                              className={`notification-priority ${notification.priority}`}
-                              style={{ backgroundColor: getPriorityColor(notification.priority) }}
-                            >
-                              {notification.priority.toUpperCase()}
+                        <div 
+                          className="notification-icon" 
+                          style={{ background: getNotificationColor(notification.type) }}
+                        >
+                          <i className={`fas ${getNotificationIcon(notification.type)}`}></i>
+                        </div>
+                        
+                        <div className="notification-content">
+                          <div className="notification-header">
+                            <div className="notification-title">{notification.title}</div>
+                            {notification.priority && (
+                              <div 
+                                className={`notification-priority ${notification.priority}`}
+                                style={{ backgroundColor: getPriorityColor(notification.priority) }}
+                              >
+                                {notification.priority.toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                          
+                          {notification.description && (
+                            <div className="notification-description">{notification.description}</div>
+                          )}
+                          
+                          <div className="notification-meta">
+                            <span className="notification-time">{notification.time}</span>
+                            {notification.user && (
+                              <span className="notification-user">
+                                <span className="user-avatar">{notification.user.avatar}</span>
+                                <span className="user-name">{notification.user.name}</span>
+                              </span>
+                            )}
+                            {notification.ticketId && (
+                              <span className="notification-ticketid">{notification.ticketId}</span>
+                            )}
+                          </div>
+                          
+                          {notification.actions && notification.actions.length > 0 && (
+                            <div className="notification-action-buttons">
+                              {notification.actions.map((action, index) => (
+                                <button 
+                                  key={index}
+                                  className="action-button"
+                                  onClick={() => console.log(`Action ${action.name} clicked for notification ${notification.id}`)}
+                                  disabled={isLoggingOut}
+                                >
+                                  <i className={`fas ${action.icon}`}></i>
+                                  <span>{action.name}</span>
+                                </button>
+                              ))}
                             </div>
                           )}
                         </div>
                         
-                        {notification.description && (
-                          <div className="notification-description">{notification.description}</div>
-                        )}
-                        
-                        <div className="notification-meta">
-                          <span className="notification-time">{notification.time}</span>
-                          {notification.user && (
-                            <span className="notification-user">
-                              <span className="user-avatar">{notification.user.avatar}</span>
-                              <span className="user-name">{notification.user.name}</span>
-                            </span>
-                          )}
-                          {notification.ticketId && (
-                            <span className="notification-ticketid">{notification.ticketId}</span>
-                          )}
+                        <div className="notification-actions">
+                          <button 
+                            className="notification-action-btn mark-read" 
+                            aria-label="Mark as read"
+                            disabled={isLoggingOut}
+                          >
+                            <i className="fas fa-check"></i>
+                          </button>
+                          <button 
+                            className="notification-action-btn options" 
+                            aria-label="More options"
+                            disabled={isLoggingOut}
+                          >
+                            <i className="fas fa-ellipsis-v"></i>
+                          </button>
                         </div>
-                        
-                        {notification.actions && notification.actions.length > 0 && (
-                          <div className="notification-action-buttons">
-                            {notification.actions.map((action, index) => (
-                              <button 
-                                key={index}
-                                className="action-button"
-                                onClick={() => console.log(`Action ${action.name} clicked for notification ${notification.id}`)}
-                              >
-                                <i className={`fas ${action.icon}`}></i>
-                                <span>{action.name}</span>
-                              </button>
-                            ))}
-                          </div>
-                        )}
                       </div>
-                      
-                      <div className="notification-actions">
-                        <button 
-                          className="notification-action-btn mark-read" 
-                          aria-label="Mark as read"
-                        >
-                          <i className="fas fa-check"></i>
-                        </button>
-                        <button 
-                          className="notification-action-btn options" 
-                          aria-label="More options"
-                        >
-                          <i className="fas fa-ellipsis-v"></i>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="notifications-footer">
-                  <button className="view-all">View all notifications</button>
-                  <div className="notifications-settings">
-                    <i className="fas fa-cog"></i>
-                    <span>Notification Settings</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-          
-          {/* Perfil de usuario mejorado con estadísticas */}
-          <div className="support-user-profile" ref={userMenuRef}>
-            <div 
-              className={`support-profile-button ${showUserMenu ? 'active' : ''}`} 
-              onClick={() => setShowUserMenu(!showUserMenu)}
-              data-tooltip="Your profile and settings"
-            >
-              <div className="support-avatar">
-                <div className="support-avatar-text">{userData.avatar}</div>
-                <div className={`support-avatar-status ${userData.status}`}></div>
-              </div>
-              
-              <div className="support-profile-info">
-                <span className="support-user-name">{userData.name}</span>
-                <span className="support-user-role">{userData.role}</span>
-              </div>
-              
-              <i className={`fas fa-chevron-${showUserMenu ? 'up' : 'down'}`}></i>
-            </div>
-            
-            {/* Menú desplegable del usuario mejorado con estadísticas */}
-            {showUserMenu && (
-              <div className="support-user-menu">
-                <div className="support-menu-header">
-                  <div className="support-user-info">
-                    <div className="support-user-avatar">
-                      <span>{userData.avatar}</span>
-                      <div className={`avatar-status ${userData.status}`}></div>
-                    </div>
-                    <div className="support-user-details">
-                      <h4>{userData.name}</h4>
-                      <span className="support-user-email">{userData.email}</span>
-                      <span className={`support-user-status ${userData.status}`}>
-                        <i className="fas fa-circle"></i> 
-                        {userData.status.charAt(0).toUpperCase() + userData.status.slice(1)}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* Stats cards */}
-                  <div className="support-user-stats">
-                    <div className="stat-card">
-                      <div className="stat-value">{userData.stats.ticketsResolved}</div>
-                      <div className="stat-label">Tickets Resolved</div>
-                    </div>
-                    <div className="stat-card">
-                      <div className="stat-value">{userData.stats.avgResponseTime}</div>
-                      <div className="stat-label">Avg. Response</div>
-                    </div>
-                    <div className="stat-card">
-                      <div className="stat-value">{userData.stats.customerSatisfaction}</div>
-                      <div className="stat-label">Satisfaction</div>
-                    </div>
-                    <div className="stat-card">
-                      <div className="stat-value">{userData.stats.availabilityToday}</div>
-                      <div className="stat-label">Availability</div>
-                    </div>
-                  </div>
-                  
-                  {/* Quick action buttons */}
-                  <div className="quick-actions">
-                    {userData.quickActions.map((action, index) => (
-                      <button key={index} className="quick-action-btn">
-                        <i className={`fas ${action.icon}`}></i>
-                        <span>{action.name}</span>
-                      </button>
                     ))}
                   </div>
-                </div>
-                
-                <div className="support-menu-section">
-                  <div className="section-title">Account</div>
-                  <div className="support-menu-items">
-                    <div className="support-menu-item">
-                      <i className="fas fa-user-circle"></i>
-                      <span>My Profile</span>
-                    </div>
-                    <div className="support-menu-item">
+                  
+                  <div className="notifications-footer">
+                    <button className="view-all" disabled={isLoggingOut}>View all notifications</button>
+                    <div className="notifications-settings">
                       <i className="fas fa-cog"></i>
-                      <span>Settings</span>
-                    </div>
-                    <div className="support-menu-item">
-                      <i className="fas fa-calendar-alt"></i>
-                      <span>My Schedule</span>
-                    </div>
-                    <div className="support-menu-item">
-                      <i className="fas fa-chart-line"></i>
-                      <span>My Performance</span>
-                      <div className="menu-item-badge">
-                        <i className="fas fa-arrow-up"></i>
-                        <span>12%</span>
-                      </div>
+                      <span>Notification Settings</span>
                     </div>
                   </div>
                 </div>
+              )}
+            </div>
+            
+            {/* Perfil de usuario mejorado con estadísticas */}
+            <div className="support-user-profile" ref={userMenuRef}>
+              <div 
+                className={`support-profile-button ${showUserMenu ? 'active' : ''}`} 
+                onClick={() => !isLoggingOut && setShowUserMenu(!showUserMenu)}
+                data-tooltip="Your profile and settings"
+              >
+                <div className="support-avatar">
+                  <div className="support-avatar-text">{userData.avatar}</div>
+                  <div className={`support-avatar-status ${userData.status}`}></div>
+                </div>
                 
-                <div className="support-menu-section">
-                  <div className="section-title">Preferences</div>
-                  <div className="support-menu-items">
-                    <div className="support-menu-item">
-                      <i className="fas fa-bell"></i>
-                      <span>Notifications</span>
-                      <div className="support-notification-badge">{notificationCount}</div>
+                <div className="support-profile-info">
+                  <span className="support-user-name">{userData.name}</span>
+                  <span className="support-user-role">{userData.role}</span>
+                </div>
+                
+                <i className={`fas fa-chevron-${showUserMenu ? 'up' : 'down'}`}></i>
+              </div>
+              
+              {/* Menú desplegable del usuario mejorado con estadísticas */}
+              {showUserMenu && !isLoggingOut && (
+                <div className="support-user-menu">
+                  <div className="support-menu-header">
+                    <div className="support-user-info">
+                      <div className="support-user-avatar">
+                        <span>{userData.avatar}</span>
+                        <div className={`avatar-status ${userData.status}`}></div>
+                      </div>
+                      <div className="support-user-details">
+                        <h4>{userData.name}</h4>
+                        <span className="support-user-email">{userData.email}</span>
+                        <span className={`support-user-status ${userData.status}`}>
+                          <i className="fas fa-circle"></i> 
+                          {userData.status.charAt(0).toUpperCase() + userData.status.slice(1)}
+                        </span>
+                      </div>
                     </div>
-                    <div className="support-menu-item toggle-item">
-                      <div className="toggle-item-content">
-                        <i className="fas fa-moon"></i>
-                        <span>Dark Mode</span>
+                    
+                    {/* Stats cards */}
+                    <div className="support-user-stats">
+                      <div className="stat-card">
+                        <div className="stat-value">{userData.stats.ticketsResolved}</div>
+                        <div className="stat-label">Tickets Resolved</div>
                       </div>
-                      <div className="toggle-switch">
-                        <div className="toggle-handle active"></div>
+                      <div className="stat-card">
+                        <div className="stat-value">{userData.stats.avgResponseTime}</div>
+                        <div className="stat-label">Avg. Response</div>
+                      </div>
+                      <div className="stat-card">
+                        <div className="stat-value">{userData.stats.customerSatisfaction}</div>
+                        <div className="stat-label">Satisfaction</div>
+                      </div>
+                      <div className="stat-card">
+                        <div className="stat-value">{userData.stats.availabilityToday}</div>
+                        <div className="stat-label">Availability</div>
                       </div>
                     </div>
-                    <div className="support-menu-item toggle-item">
-                      <div className="toggle-item-content">
-                        <i className="fas fa-volume-up"></i>
-                        <span>Sound Alerts</span>
+
+                    {/* Quick action buttons */}
+                  </div>
+                  
+                  <div className="support-menu-section">
+                    <div className="section-title">Account</div>
+                    <div className="support-menu-items">
+                      <div className="support-menu-item">
+                        <i className="fas fa-user-circle"></i>
+                        <span>My Profile</span>
                       </div>
-                      <div className="toggle-switch">
-                        <div className="toggle-handle"></div>
+                      <div className="support-menu-item">
+                        <i className="fas fa-cog"></i>
+                        <span>Settings</span>
+                      </div>
+                      <div className="support-menu-item">
+                        <i className="fas fa-calendar-alt"></i>
+                        <span>My Schedule</span>
+                      </div>
+                      <div className="support-menu-item">
+                        <i className="fas fa-chart-line"></i>
+                        <span>My Performance</span>
+                        <div className="menu-item-badge">
+                          <i className="fas fa-arrow-up"></i>
+                          <span>12%</span>
+                        </div>
                       </div>
                     </div>
-                    <div className="support-menu-item toggle-item">
-                      <div className="toggle-item-content">
-                        <i className="fas fa-desktop"></i>
-                        <span>Desktop Notifications</span>
+                  </div>
+                  
+                  <div className="support-menu-section">
+                    <div className="section-title">Preferences</div>
+                    <div className="support-menu-items">
+                      <div className="support-menu-item">
+                        <i className="fas fa-bell"></i>
+                        <span>Notifications</span>
+                        <div className="support-notification-badge">{notificationCount}</div>
                       </div>
-                      <div className="toggle-switch">
-                        <div className="toggle-handle active"></div>
+                      <div className="support-menu-item toggle-item">
+                        <div className="toggle-item-content">
+                          <i className="fas fa-moon"></i>
+                          <span>Dark Mode</span>
+                        </div>
+                        <div className="toggle-switch">
+                          <div className="toggle-handle active"></div>
+                        </div>
                       </div>
+                      <div className="support-menu-item toggle-item">
+                        <div className="toggle-item-content">
+                          <i className="fas fa-volume-up"></i>
+                          <span>Sound Alerts</span>
+                        </div>
+                        <div className="toggle-switch">
+                          <div className="toggle-handle"></div>
+                        </div>
+                      </div>
+                      <div className="support-menu-item toggle-item">
+                        <div className="toggle-item-content">
+                          <i className="fas fa-desktop"></i>
+                          <span>Desktop Notifications</span>
+                        </div>
+                        <div className="toggle-switch">
+                          <div className="toggle-handle active"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="support-menu-section">
+                    <div className="section-title">Support</div>
+                    <div className="support-menu-items">
+                      <div className="support-menu-item help">
+                        <i className="fas fa-question-circle"></i>
+                        <span>Help Center</span>
+                      </div>
+                      <div className="support-menu-item">
+                        <i className="fas fa-book"></i>
+                        <span>Documentation</span>
+                        <div className="menu-item-badge new">
+                          <span>NEW</span>
+                        </div>
+                      </div>
+                      <div className="support-menu-item">
+                        <i className="fas fa-headset"></i>
+                        <span>Contact Support</span>
+                      </div>
+                      <div className="support-menu-item">
+                        <i className="fas fa-bug"></i>
+                        <span>Report Issue</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="support-menu-footer">
+                    <div className="support-menu-item logout" onClick={handleLogout}>
+                      <i className="fas fa-sign-out-alt"></i>
+                      <span>Log Out</span>
+                    </div>
+                    <div className="version-info">
+                      <span>TherapySync™ Support</span>
+                      <span>v2.7.0</span>
                     </div>
                   </div>
                 </div>
-                
-                <div className="support-menu-section">
-                  <div className="section-title">Support</div>
-                  <div className="support-menu-items">
-                    <div className="support-menu-item help">
-                      <i className="fas fa-question-circle"></i>
-                      <span>Help Center</span>
-                    </div>
-                    <div className="support-menu-item">
-                      <i className="fas fa-book"></i>
-                      <span>Documentation</span>
-                      <div className="menu-item-badge new">
-                        <span>NEW</span>
-                      </div>
-                    </div>
-                    <div className="support-menu-item">
-                      <i className="fas fa-headset"></i>
-                      <span>Contact Support</span>
-                    </div>
-                    <div className="support-menu-item">
-                      <i className="fas fa-bug"></i>
-                      <span>Report Issue</span>
-                    </div>
-                  </div>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        {/* Búsqueda móvil expandida - aparece cuando showSearch es true */}
+        {showSearch && !isLoggingOut && (
+          <div className="mobile-search-container">
+            <div className="mobile-search-form">
+              <i className="fas fa-search"></i>
+              <input 
+                type="text" 
+                placeholder="Search tickets, articles, users..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                ref={searchInputRef}
+                disabled={isLoggingOut}
+              />
+              <button 
+                className="mobile-search-close" 
+                onClick={() => setShowSearch(false)}
+                disabled={isLoggingOut}
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            {searchQuery && (
+              <div className="mobile-search-suggestions">
+                <div className="suggestions-title">Quick Suggestions</div>
+                <div className="suggestion-item">
+                  <i className="fas fa-ticket-alt"></i>
+                  <span>Open tickets</span>
                 </div>
-                
-                <div className="support-menu-footer">
-                  <div className="support-menu-item logout" onClick={handleLogout}>
-                    <i className="fas fa-sign-out-alt"></i>
-                    <span>Log Out</span>
-                  </div>
-                  <div className="version-info">
-                    <span>TherapySync™ Support</span>
-                    <span>v2.7.0</span>
-                  </div>
+                <div className="suggestion-item">
+                  <i className="fas fa-file-alt"></i>
+                  <span>Recent documents</span>
+                </div>
+                <div className="suggestion-item">
+                  <i className="fas fa-users"></i>
+                  <span>My team</span>
+                </div>
+                <div className="suggestion-item">
+                  <i className="fas fa-star"></i>
+                  <span>Favorites</span>
                 </div>
               </div>
             )}
           </div>
-        </div>
-      </div>
-      
-      {/* Búsqueda móvil expandida - aparece cuando showSearch es true */}
-      {showSearch && (
-        <div className="mobile-search-container">
-          <div className="mobile-search-form">
-            <i className="fas fa-search"></i>
-            <input 
-              type="text" 
-              placeholder="Search tickets, articles, users..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              ref={searchInputRef}
-            />
-            <button 
-              className="mobile-search-close" 
-              onClick={() => setShowSearch(false)}
-            >
-              <i className="fas fa-times"></i>
-            </button>
-          </div>
-          {searchQuery && (
-            <div className="mobile-search-suggestions">
-              <div className="suggestions-title">Quick Suggestions</div>
-              <div className="suggestion-item">
-                <i className="fas fa-ticket-alt"></i>
-                <span>Open tickets</span>
-              </div>
-              <div className="suggestion-item">
-                <i className="fas fa-file-alt"></i>
-                <span>Recent documents</span>
-              </div>
-              <div className="suggestion-item">
-                <i className="fas fa-users"></i>
-                <span>My team</span>
-              </div>
-              <div className="suggestion-item">
-                <i className="fas fa-star"></i>
-                <span>Favorites</span>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </header>
+        )}
+      </header>
+    </>
   );
 };
 

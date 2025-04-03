@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../../components/login/AuthContext'; // Importar el contexto de autenticación
 import '../../../../styles/developer/Referrals/CreateNF/CreateNF.scss';
 import '../../../../styles/developer/Referrals/CreateNF/CreateReferralForm.scss';
 import logoImg from '../../../../assets/LogoMHC.jpeg';
@@ -8,18 +9,22 @@ import '../../../../styles/developer/Referrals/CreateNF/DatePicker.scss';
 import LoadingScreen from './LoadingDates';
 import '../../../../styles/developer/Referrals/CreateNF/LoadingDates.scss';
 import DOBDatePicker from './DOBDatePicker';
+import LogoutAnimation from '../../../../components/LogOut/LogOut'; // Importar el componente de animación
 
 const TPCreateNF = () => {
-  const notificationCount = 0; // Define the notificationCount variable
   const navigate = useNavigate();
+  const { currentUser, logout } = useAuth(); // Usar el contexto de autenticación
+  
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
+  
   const fileInputRef = useRef(null);
   const userMenuRef = useRef(null);
-  
-  // Estado para la pantalla de carga
-  const [isLoading, setIsLoading] = useState(false);
   
   // Estado inicial del formulario
   const [formData, setFormData] = useState({
@@ -66,18 +71,23 @@ const TPCreateNF = () => {
     disciplines: []
   });
 
+  // Función para obtener iniciales del nombre
+  function getInitials(name) {
+    if (!name) return "U";
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  }
+  
+  // Usar datos de usuario del contexto de autenticación
   const userData = {
-    name: 'Luis Nava',
-    avatar: 'LN',
-    email: 'luis.nava@therapysync.com',
-    role: 'Developer',
+    name: currentUser?.fullname || currentUser?.username || 'Usuario',
+    avatar: getInitials(currentUser?.fullname || currentUser?.username || 'Usuario'),
+    email: currentUser?.email || 'usuario@ejemplo.com',
+    role: currentUser?.role || 'Usuario',
     status: 'online', // online, away, busy, offline
-    stats: {
-      
-    },
-    quickActions: [
-      
-    ]
   };
   
   // Datos simulados para selects
@@ -125,6 +135,18 @@ const TPCreateNF = () => {
   // Estado para controlar la adición de un nuevo manager
   const [addingNewManager, setAddingNewManager] = useState(false);
   
+  // Detectar el tamaño de la pantalla para responsive
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    handleResize(); // Comprobar inicialmente
+    window.addEventListener('resize', handleResize);
+    
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
   // Efecto para cerrar menú de usuario al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -157,28 +179,55 @@ const TPCreateNF = () => {
   
   // Manejar transición al menú principal
   const handleMainMenuTransition = () => {
-    navigate('/homePage');
+    if (isLoggingOut) return; // No permitir navegación durante cierre de sesión
+    
+    // Extraer el rol base para la navegación
+    const baseRole = currentUser?.role?.split(' - ')[0].toLowerCase() || 'developer';
+    
+    navigate(`/${baseRole}/homePage`);
   };
 
-  // Manejar cierre de sesión
+  // Manejar cierre de sesión - con animación mejorada
   const handleLogout = () => {
-    // Aquí iría la lógica para cerrar sesión
-    console.log('Logout');
-    navigate('/login');
+    setIsLoggingOut(true);
+    setShowUserMenu(false);
+    
+    // Aplicar clase a document.body para efectos globales
+    document.body.classList.add('logging-out');
+  };
+  
+  // Callback para cuando la animación de cierre de sesión termine
+  const handleLogoutAnimationComplete = () => {
+    // Ejecutar el logout del contexto de autenticación
+    logout();
+    // Navegar a la página de inicio de sesión
+    navigate('/');
   };
   
   // Manejar transición al menú de referrals
   const handleReferralsMenuTransition = () => {
-    navigate('/referrals');
+    if (isLoggingOut) return; // No permitir navegación durante cierre de sesión
+    
+    // Extraer el rol base para la navegación
+    const baseRole = currentUser?.role?.split(' - ')[0].toLowerCase() || 'developer';
+    
+    navigate(`/${baseRole}/referrals`);
   };
   
   // Manejador para volver a la lista de referrals
   const handleBackToReferrals = () => {
-    navigate('/referrals');
+    if (isLoggingOut) return; // No permitir navegación durante cierre de sesión
+    
+    // Extraer el rol base para la navegación
+    const baseRole = currentUser?.role?.split(' - ')[0].toLowerCase() || 'developer';
+    
+    navigate(`/${baseRole}/referrals`);
   };
   
   // Manejar clic en el área de subida de PDF
   const handlePdfAreaClick = () => {
+    if (isLoggingOut) return; // No permitir acciones durante cierre de sesión
+    
     if (!showForm) {
       fileInputRef.current.click();
     }
@@ -186,6 +235,8 @@ const TPCreateNF = () => {
   
   // Manejar la subida de archivos
   const handleFileUpload = (e) => {
+    if (isLoggingOut) return; // No permitir acciones durante cierre de sesión
+    
     const files = Array.from(e.target.files).filter(file => file.type === 'application/pdf');
     
     if (files.length === 0) {
@@ -199,6 +250,8 @@ const TPCreateNF = () => {
   
   // Manejar cambios en los inputs del formulario
   const handleInputChange = (e) => {
+    if (isLoggingOut) return; // No permitir acciones durante cierre de sesión
+    
     const { name, value, type, checked } = e.target;
     
     setFormData(prev => ({
@@ -209,6 +262,8 @@ const TPCreateNF = () => {
   
   // Manejar cambio en contactNumbers
   const handleContactNumberChange = (index, value) => {
+    if (isLoggingOut) return; // No permitir acciones durante cierre de sesión
+    
     const updatedNumbers = [...formData.contactNumbers];
     updatedNumbers[index] = value;
     
@@ -220,6 +275,8 @@ const TPCreateNF = () => {
   
   // Agregar un nuevo número de contacto
   const addContactNumber = () => {
+    if (isLoggingOut) return; // No permitir acciones durante cierre de sesión
+    
     setFormData(prev => ({
       ...prev,
       contactNumbers: [...prev.contactNumbers, '']
@@ -228,6 +285,8 @@ const TPCreateNF = () => {
   
   // Eliminar un número de contacto
   const removeContactNumber = (index) => {
+    if (isLoggingOut) return; // No permitir acciones durante cierre de sesión
+    
     if (formData.contactNumbers.length > 1) {
       const updatedNumbers = [...formData.contactNumbers];
       updatedNumbers.splice(index, 1);
@@ -241,6 +300,8 @@ const TPCreateNF = () => {
   
   // Manejar selección de médico
   const handlePhysicianChange = (e) => {
+    if (isLoggingOut) return; // No permitir acciones durante cierre de sesión
+    
     const physicianId = e.target.value;
     
     setFormData(prev => ({
@@ -253,6 +314,8 @@ const TPCreateNF = () => {
   
   // Manejar selección de agencia
   const handleAgencyChange = (e) => {
+    if (isLoggingOut) return; // No permitir acciones durante cierre de sesión
+    
     const agencyId = e.target.value;
     
     setFormData(prev => ({
@@ -268,6 +331,8 @@ const TPCreateNF = () => {
 
   // Manejar selección de nurse manager
   const handleNurseManagerChange = (e) => {
+    if (isLoggingOut) return; // No permitir acciones durante cierre de sesión
+    
     const value = e.target.value;
     
     if (value === 'new') {
@@ -289,6 +354,8 @@ const TPCreateNF = () => {
   
   // Manejar cambios en opciones de Homebound
   const handleHomeboundChange = (optionId, isChecked) => {
+    if (isLoggingOut) return; // No permitir acciones durante cierre de sesión
+    
     setFormData(prev => ({
       ...prev,
       homebound: {
@@ -300,6 +367,8 @@ const TPCreateNF = () => {
   
   // Manejar cambios en opciones de Reasons for Referral
   const handleReasonChange = (reasonId, isChecked) => {
+    if (isLoggingOut) return; // No permitir acciones durante cierre de sesión
+    
     setFormData(prev => ({
       ...prev,
       reasonsForReferral: {
@@ -311,6 +380,8 @@ const TPCreateNF = () => {
   
   // Manejar selección de disciplinas
   const handleDisciplineChange = (discipline) => {
+    if (isLoggingOut) return; // No permitir acciones durante cierre de sesión
+    
     let updatedDisciplines = { ...selectedDisciplines };
     
     updatedDisciplines[discipline] = !updatedDisciplines[discipline];
@@ -359,6 +430,8 @@ const TPCreateNF = () => {
   
   // Manejar selección de terapeuta
   const handleTherapistSelection = (discipline, therapistId) => {
+    if (isLoggingOut) return; // No permitir acciones durante cierre de sesión
+    
     setSelectedTherapists(prev => ({
       ...prev,
       [discipline]: therapistId
@@ -381,17 +454,24 @@ const TPCreateNF = () => {
   
   // Manejar finalización del proceso de carga
   const handleLoadingComplete = () => {
+    if (isLoggingOut) return; // No permitir acciones durante cierre de sesión
+    
     setIsLoading(false);
+    
+    // Extraer el rol base para la navegación
+    const baseRole = currentUser?.role?.split(' - ')[0].toLowerCase() || 'developer';
     
     // Mostrar mensaje de éxito y redirigir
     setTimeout(() => {
-      navigate('/referrals');
+      navigate(`/${baseRole}/referrals`);
     }, 500);
   };
   
   // Manejar envío del formulario
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    if (isLoggingOut) return; // No permitir acciones durante cierre de sesión
     
     // Validar que se seleccionó al menos un par de disciplinas
     if (!validateDisciplines()) {
@@ -464,7 +544,15 @@ const TPCreateNF = () => {
   ];
 
   return (
-    <div className="create-referral-dashboard">
+    <div className={`create-referral-dashboard ${isLoggingOut ? 'logging-out' : ''}`}>
+      {/* Animación de cierre de sesión - Mostrar solo cuando se está cerrando sesión */}
+      {isLoggingOut && (
+        <LogoutAnimation 
+          isMobile={isMobile} 
+          onAnimationComplete={handleLogoutAnimationComplete} 
+        />
+      )}
+      
       {/* Pantalla de carga */}
       <LoadingScreen isLoading={isLoading} onComplete={handleLoadingComplete} />
       
@@ -474,7 +562,7 @@ const TPCreateNF = () => {
       </div>
       
       {/* Header con logo y perfil */}
-      <header className="main-header">
+      <header className={`main-header ${isLoggingOut ? 'logging-out' : ''}`}>
         <div className="header-container">
           {/* Logo y navegación de menús */}
           <div className="logo-container">
@@ -486,6 +574,7 @@ const TPCreateNF = () => {
                 className="nav-button main-menu" 
                 onClick={handleMainMenuTransition}
                 title="Volver al menú principal"
+                disabled={isLoggingOut}
               >
                 <i className="fas fa-th-large"></i>
                 <span>Menú Principal</span>
@@ -495,6 +584,7 @@ const TPCreateNF = () => {
                 className="nav-button referrals-menu active" 
                 onClick={handleReferralsMenuTransition}
                 title="Menú de Referrals"
+                disabled={isLoggingOut}
               >
                 <i className="fas fa-file-medical"></i>
                 <span>Referrals</span>
@@ -511,7 +601,7 @@ const TPCreateNF = () => {
           <div className="support-user-profile" ref={userMenuRef}>
             <div 
               className={`support-profile-button ${showUserMenu ? 'active' : ''}`} 
-              onClick={() => setShowUserMenu(!showUserMenu)}
+              onClick={() => !isLoggingOut && setShowUserMenu(!showUserMenu)}
               data-tooltip="Your profile and settings"
             >
               <div className="support-avatar">
@@ -528,7 +618,7 @@ const TPCreateNF = () => {
             </div>
             
             {/* Menú desplegable del usuario mejorado con estadísticas */}
-            {showUserMenu && (
+            {showUserMenu && !isLoggingOut && (
               <div className="support-user-menu">
                 <div className="support-menu-header">
                   <div className="support-user-info">
@@ -631,11 +721,15 @@ const TPCreateNF = () => {
       </header>
       
       {/* Contenido principal */}
-      <main className="main-content">
+      <main className={`main-content ${isLoggingOut ? 'fade-out' : ''}`}>
         <div className="create-referral-container">
           {/* Navegación de miga de pan */}
           <div className="breadcrumb-navigation">
-            <button className="back-button" onClick={handleBackToReferrals}>
+            <button 
+              className="back-button" 
+              onClick={handleBackToReferrals}
+              disabled={isLoggingOut}
+            >
               <i className="fas fa-arrow-left"></i>
               <span>Back to Referrals</span>
             </button>
@@ -660,7 +754,7 @@ const TPCreateNF = () => {
             <div 
               className="form-placeholder" 
               onClick={handlePdfAreaClick}
-              style={{ cursor: 'pointer' }}
+              style={{ cursor: !isLoggingOut ? 'pointer' : 'default' }}
             >
               {/* Input oculto para la selección de archivos */}
               <input
@@ -670,6 +764,7 @@ const TPCreateNF = () => {
                 accept=".pdf"
                 multiple
                 onChange={handleFileUpload}
+                disabled={isLoggingOut}
               />
               
               {!showForm ? (
@@ -698,7 +793,7 @@ const TPCreateNF = () => {
             </div>
             
             {/* Si hay archivos subidos, mostrar el formulario */}
-            {showForm && (
+            {showForm && !isLoggingOut && (
               <form className="patient-referral-form" onSubmit={handleSubmit}>
                 {/* Sección de datos del paciente */}
                 <div className="form-section">
@@ -717,6 +812,7 @@ const TPCreateNF = () => {
                         value={formData.firstName}
                         onChange={handleInputChange}
                         required
+                        disabled={isLoggingOut}
                       />
                     </div>
                     
@@ -729,6 +825,7 @@ const TPCreateNF = () => {
                         value={formData.lastName}
                         onChange={handleInputChange}
                         required
+                        disabled={isLoggingOut}
                       />
                     </div>
                     
@@ -741,6 +838,7 @@ const TPCreateNF = () => {
                           value={formData.dob}
                           onChange={handleInputChange}
                           required
+                          disabled={isLoggingOut}
                         />
                     </div>
                     
@@ -752,6 +850,7 @@ const TPCreateNF = () => {
                         value={formData.gender}
                         onChange={handleInputChange}
                         required
+                        disabled={isLoggingOut}
                       >
                         <option value="">Select Gender</option>
                         <option value="male">Male</option>
@@ -769,6 +868,7 @@ const TPCreateNF = () => {
                         value={formData.address}
                         onChange={handleInputChange}
                         required
+                        disabled={isLoggingOut}
                       />
                     </div>
                     
@@ -781,6 +881,7 @@ const TPCreateNF = () => {
                         value={formData.city}
                         onChange={handleInputChange}
                         required
+                        disabled={isLoggingOut}
                       />
                     </div>
                     
@@ -793,6 +894,7 @@ const TPCreateNF = () => {
                         value={formData.zipCode}
                         onChange={handleInputChange}
                         required
+                        disabled={isLoggingOut}
                       />
                     </div>
                     
@@ -806,6 +908,7 @@ const TPCreateNF = () => {
                               value={number}
                               onChange={(e) => handleContactNumberChange(index, e.target.value)}
                               placeholder="Phone number"
+                              disabled={isLoggingOut}
                             />
                             
                             <div className="contact-actions">
@@ -814,6 +917,7 @@ const TPCreateNF = () => {
                                   type="button"
                                   className="add-contact"
                                   onClick={addContactNumber}
+                                  disabled={isLoggingOut}
                                 >
                                   <i className="fas fa-plus"></i>
                                 </button>
@@ -824,6 +928,7 @@ const TPCreateNF = () => {
                                   type="button"
                                   className="remove-contact"
                                   onClick={() => removeContactNumber(index)}
+                                  disabled={isLoggingOut}
                                 >
                                   <i className="fas fa-minus"></i>
                                 </button>
@@ -852,6 +957,7 @@ const TPCreateNF = () => {
                         value={formData.payorType}
                         onChange={handleInputChange}
                         required
+                        disabled={isLoggingOut}
                       >
                         <option value="">Select Payor Type</option>
                         <option value="medicare">Medicare</option>
@@ -871,6 +977,7 @@ const TPCreateNF = () => {
                             <CustomDatePicker
                               selectedDate={formData.certPeriodStart}
                               onChange={(date) => {
+                                if (isLoggingOut) return;
                                 setFormData(prev => ({
                                   ...prev,
                                   certPeriodStart: date
@@ -878,6 +985,7 @@ const TPCreateNF = () => {
                               }}
                               name="certPeriodStart"
                               required={true}
+                              disabled={isLoggingOut}
                             />
                           </div>
                           <span className="date-separator">-</span>
@@ -903,6 +1011,7 @@ const TPCreateNF = () => {
                         name="urgencyLevel"
                         value={formData.urgencyLevel}
                         onChange={handleInputChange}
+                        disabled={isLoggingOut}
                       >
                         <option value="low">Low Priority</option>
                         <option value="normal">Normal</option>
@@ -929,6 +1038,7 @@ const TPCreateNF = () => {
                         value={formData.physicianId}
                         onChange={handlePhysicianChange}
                         required
+                        disabled={isLoggingOut}
                       >
                         <option value="">Select Physician</option>
                         {physicians.map(physician => (
@@ -950,6 +1060,7 @@ const TPCreateNF = () => {
                           value={formData.newPhysicianName}
                           onChange={handleInputChange}
                           required
+                          disabled={isLoggingOut}
                         />
                       </div>
                     )}
@@ -962,6 +1073,7 @@ const TPCreateNF = () => {
                         value={formData.agencyId}
                         onChange={handleAgencyChange}
                         required
+                        disabled={isLoggingOut}
                       >
                         <option value="">Select Agency</option>
                         {agencies.map(agency => (
@@ -982,6 +1094,7 @@ const TPCreateNF = () => {
                             value={formData.agencyBranch}
                             onChange={handleInputChange}
                             required
+                            disabled={isLoggingOut}
                           >
                             <option value="">Select Branch</option>
                             {getSelectedAgency()?.branches.map((branch, index) => (
@@ -1000,6 +1113,7 @@ const TPCreateNF = () => {
                             value={formData.nurseManager}
                             onChange={handleNurseManagerChange}
                             required
+                            disabled={isLoggingOut}
                           >
                             <option value="">Select Nurse Manager</option>
                             {getSelectedAgency()?.managers.map((manager, index) => (
@@ -1021,6 +1135,7 @@ const TPCreateNF = () => {
                               value={formData.newNurseManager}
                               onChange={handleInputChange}
                               required
+                              disabled={isLoggingOut}
                             />
                           </div>
                         )}
@@ -1036,6 +1151,7 @@ const TPCreateNF = () => {
                         onChange={handleInputChange}
                         rows="3"
                         required
+                        disabled={isLoggingOut}
                       ></textarea>
                     </div>
                     
@@ -1047,6 +1163,7 @@ const TPCreateNF = () => {
                         value={formData.pmh}
                         onChange={handleInputChange}
                         rows="3"
+                        disabled={isLoggingOut}
                       ></textarea>
                     </div>
                     
@@ -1057,6 +1174,7 @@ const TPCreateNF = () => {
                         name="priorLevelOfFunction"
                         value={formData.priorLevelOfFunction}
                         onChange={handleInputChange}
+                        disabled={isLoggingOut}
                       >
                         {priorLevelOptions.map((option, index) => (
                           <option key={index} value={option}>
@@ -1076,6 +1194,7 @@ const TPCreateNF = () => {
                                 type="checkbox"
                                 checked={!!formData.homebound[option.id]}
                                 onChange={(e) => handleHomeboundChange(option.id, e.target.checked)}
+                                disabled={isLoggingOut}
                               />
                               <span className="checkbox-label">{option.label}</span>
                             </label>
@@ -1086,13 +1205,17 @@ const TPCreateNF = () => {
                                 className="form-control other-reason mt-1"
                                 placeholder="Explain other reason"
                                 value={formData.homebound.otherReason || ''}
-                                onChange={(e) => setFormData(prev => ({
-                                  ...prev,
-                                  homebound: {
-                                    ...prev.homebound,
-                                    otherReason: e.target.value
-                                  }
-                                }))}
+                                onChange={(e) => {
+                                  if (isLoggingOut) return;
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    homebound: {
+                                      ...prev.homebound,
+                                      otherReason: e.target.value
+                                    }
+                                  }));
+                                }}
+                                disabled={isLoggingOut}
                               />
                             )}
                           </div>
@@ -1109,6 +1232,7 @@ const TPCreateNF = () => {
                         value={formData.wbs}
                         onChange={handleInputChange}
                         placeholder="XX-XXX-X-XXXX (e.g., 01-123-4-5678)"
+                        disabled={isLoggingOut}
                       />
                     </div>
                   </div>
@@ -1132,6 +1256,7 @@ const TPCreateNF = () => {
                                 type="checkbox"
                                 checked={!!formData.reasonsForReferral[reason.id]}
                                 onChange={(e) => handleReasonChange(reason.id, e.target.checked)}
+                                disabled={isLoggingOut}
                               />
                               <span className="checkbox-label">{reason.label}</span>
                             </label>
@@ -1144,15 +1269,19 @@ const TPCreateNF = () => {
                         <textarea
                           name="additionalReasons"
                           value={formData.reasonsForReferral.additional || ''}
-                          onChange={(e) => setFormData(prev => ({
-                            ...prev,
-                            reasonsForReferral: {
-                              ...prev.reasonsForReferral,
-                              additional: e.target.value
-                            }
-                          }))}
+                          onChange={(e) => {
+                            if (isLoggingOut) return;
+                            setFormData(prev => ({
+                              ...prev,
+                              reasonsForReferral: {
+                                ...prev.reasonsForReferral,
+                                additional: e.target.value
+                              }
+                            }));
+                          }}
                           className="form-control"
                           rows="3"
+                          disabled={isLoggingOut}
                         ></textarea>
                       </div>
                     </div>
@@ -1169,6 +1298,7 @@ const TPCreateNF = () => {
                                   type="checkbox"
                                   checked={selectedDisciplines.PT}
                                   onChange={() => handleDisciplineChange('PT')}
+                                  disabled={isLoggingOut}
                                 />
                                 <span>PT</span>
                               </label>
@@ -1177,6 +1307,7 @@ const TPCreateNF = () => {
                                   type="checkbox"
                                   checked={selectedDisciplines.PTA}
                                   onChange={() => handleDisciplineChange('PTA')}
+                                  disabled={isLoggingOut}
                                 />
                                 <span>PTA</span>
                               </label>
@@ -1191,6 +1322,7 @@ const TPCreateNF = () => {
                                   value={selectedTherapists.PT || ''}
                                   onChange={(e) => handleTherapistSelection('PT', e.target.value)}
                                   required
+                                  disabled={isLoggingOut}
                                 >
                                   <option value="">Select PT Therapist</option>
                                   {therapists.PT.map(therapist => (
@@ -1211,6 +1343,7 @@ const TPCreateNF = () => {
                                   value={selectedTherapists.PTA || ''}
                                   onChange={(e) => handleTherapistSelection('PTA', e.target.value)}
                                   required
+                                  disabled={isLoggingOut}
                                 >
                                   <option value="">Select PTA Therapist</option>
                                   {therapists.PTA.map(therapist => (
@@ -1231,6 +1364,7 @@ const TPCreateNF = () => {
                                   type="checkbox"
                                   checked={selectedDisciplines.OT}
                                   onChange={() => handleDisciplineChange('OT')}
+                                  disabled={isLoggingOut}
                                 />
                                 <span>OT</span>
                               </label>
@@ -1239,6 +1373,7 @@ const TPCreateNF = () => {
                                   type="checkbox"
                                   checked={selectedDisciplines.COTA}
                                   onChange={() => handleDisciplineChange('COTA')}
+                                  disabled={isLoggingOut}
                                 />
                                 <span>COTA</span>
                               </label>
@@ -1253,6 +1388,7 @@ const TPCreateNF = () => {
                                   value={selectedTherapists.OT || ''}
                                   onChange={(e) => handleTherapistSelection('OT', e.target.value)}
                                   required
+                                  disabled={isLoggingOut}
                                 >
                                   <option value="">Select OT Therapist</option>
                                   {therapists.OT.map(therapist => (
@@ -1273,6 +1409,7 @@ const TPCreateNF = () => {
                                   value={selectedTherapists.COTA || ''}
                                   onChange={(e) => handleTherapistSelection('COTA', e.target.value)}
                                   required
+                                  disabled={isLoggingOut}
                                 >
                                   <option value="">Select COTA Therapist</option>
                                   {therapists.COTA.map(therapist => (
@@ -1293,6 +1430,7 @@ const TPCreateNF = () => {
                                   type="checkbox"
                                   checked={selectedDisciplines.ST}
                                   onChange={() => handleDisciplineChange('ST')}
+                                  disabled={isLoggingOut}
                                 />
                                 <span>ST</span>
                               </label>
@@ -1301,6 +1439,7 @@ const TPCreateNF = () => {
                                   type="checkbox"
                                   checked={selectedDisciplines.STA}
                                   onChange={() => handleDisciplineChange('STA')}
+                                  disabled={isLoggingOut}
                                 />
                                 <span>STA</span>
                               </label>
@@ -1315,6 +1454,7 @@ const TPCreateNF = () => {
                                   value={selectedTherapists.ST || ''}
                                   onChange={(e) => handleTherapistSelection('ST', e.target.value)}
                                   required
+                                  disabled={isLoggingOut}
                                 >
                                   <option value="">Select ST Therapist</option>
                                   {therapists.ST.map(therapist => (
@@ -1335,6 +1475,7 @@ const TPCreateNF = () => {
                                   value={selectedTherapists.STA || ''}
                                   onChange={(e) => handleTherapistSelection('STA', e.target.value)}
                                   required
+                                  disabled={isLoggingOut}
                                 >
                                   <option value="">Select STA Therapist</option>
                                   {therapists.STA.map(therapist => (
@@ -1355,7 +1496,11 @@ const TPCreateNF = () => {
                     </div>
 
                     <div className="form-group full-width submit-group">
-                      <button type="submit" className="save-referral-btn">
+                      <button 
+                        type="submit" 
+                        className="save-referral-btn"
+                        disabled={isLoggingOut}
+                      >
                         <i className="fas fa-save"></i>
                         Save Patient Referral
                       </button>

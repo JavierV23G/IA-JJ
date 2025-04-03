@@ -1,18 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../components/login/AuthContext'; // Importar el contexto de autenticación
 import '../../../styles/developer/Referrals/ReferralsPage.scss';
 import logoImg from '../../../assets/LogoMHC.jpeg';
+import LogoutAnimation from '../../../components/LogOut/LogOut'; // Importar el componente de animación
 
 const DevReferralsPage = () => {
   const navigate = useNavigate();
+  const { currentUser, logout } = useAuth(); // Usar el contexto de autenticación
+  
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [activeMenuIndex, setActiveMenuIndex] = useState(1); // Por defecto en "Create New Referral"
   const [menuTransitioning, setMenuTransitioning] = useState(false);
   const [showMenuSwitch, setShowMenuSwitch] = useState(false);
+  const [parallaxPosition, setParallaxPosition] = useState({ x: 0, y: 0 });
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
+  
   const userMenuRef = useRef(null);
   const menuRef = useRef(null);
   const containerRef = useRef(null);
-  const [parallaxPosition, setParallaxPosition] = useState({ x: 0, y: 0 });
   
   // Opciones del menú de referrals con iconos y colores personalizados
   const menuOptions = [
@@ -23,29 +31,41 @@ const DevReferralsPage = () => {
     { id: 5, name: "Referral Stats", icon: "fa-chart-bar", route: '/referrals/stats', color: "#4CAF50" }
   ];
 
-  const [notificationCount, setNotificationCount] = useState(0);
-
+  // Función para obtener iniciales del nombre
+  function getInitials(name) {
+    if (!name) return "U";
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  }
+  
+  // Usar datos de usuario del contexto de autenticación
   const userData = {
-    name: 'Luis Nava',
-    avatar: 'LN',
-    email: 'luis.nava@therapysync.com',
-    role: 'Developer',
+    name: currentUser?.fullname || currentUser?.username || 'Usuario',
+    avatar: getInitials(currentUser?.fullname || currentUser?.username || 'Usuario'),
+    email: currentUser?.email || 'usuario@ejemplo.com',
+    role: currentUser?.role || 'Usuario',
     status: 'online', // online, away, busy, offline
-    stats: {
-      ticketsResolved: 127,
-      avgResponseTime: '14m',
-      customerSatisfaction: '4.9/5',
-      availabilityToday: '92%'
-    },
-    quickActions: [
-      
-    ]
   };
+  
+  // Detectar el tamaño de la pantalla para responsive
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    handleResize(); // Comprobar inicialmente
+    window.addEventListener('resize', handleResize);
+    
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   // Efecto para la rotación automática del carrusel
   useEffect(() => {
     const interval = setInterval(() => {
-      if (!menuTransitioning) {
+      if (!menuTransitioning && !isLoggingOut) {
         setActiveMenuIndex((prevIndex) => 
           prevIndex >= menuOptions.length - 1 ? 0 : prevIndex + 1
         );
@@ -53,11 +73,13 @@ const DevReferralsPage = () => {
     }, 10000); // Cada 10 segundos
     
     return () => clearInterval(interval);
-  }, [menuOptions.length, menuTransitioning]);
+  }, [menuOptions.length, menuTransitioning, isLoggingOut]);
   
   // Efecto para mostrar el indicador de cambio de menú
   useEffect(() => {
     const handleMouseMove = (e) => {
+      if (isLoggingOut) return; // No calcular durante el cierre de sesión
+      
       // Mostrar el indicador cuando el mouse está a menos de 50px del borde izquierdo
       if (e.clientX < 50) {
         setShowMenuSwitch(true);
@@ -78,7 +100,7 @@ const DevReferralsPage = () => {
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
     };
-  }, []);
+  }, [isLoggingOut]);
   
   // Efecto para cerrar menú de usuario al hacer clic fuera
   useEffect(() => {
@@ -94,25 +116,42 @@ const DevReferralsPage = () => {
     };
   }, []);
   
-  // Manejar la acción de cerrar sesión
+  // Manejar cierre de sesión - con animación mejorada
   const handleLogout = () => {
-    // Aquí puedes agregar la lógica para cerrar sesión, por ejemplo, limpiar el estado de autenticación y redirigir al usuario a la página de inicio de sesión
-    console.log('Logging out...');
-    navigate('/login');
+    setIsLoggingOut(true);
+    setShowUserMenu(false);
+    
+    // Aplicar clase a document.body para efectos globales
+    document.body.classList.add('logging-out');
+  };
+  
+  // Callback para cuando la animación de cierre de sesión termine
+  const handleLogoutAnimationComplete = () => {
+    // Ejecutar el logout del contexto de autenticación
+    logout();
+    // Navegar a la página de inicio de sesión
+    navigate('/');
   };
 
   // Manejar transición al menú principal
   const handleMainMenuTransition = () => {
+    if (isLoggingOut) return; // No permitir navegación durante cierre de sesión
+    
     setMenuTransitioning(true);
+    
+    // Extraer el rol base para la navegación
+    const baseRole = currentUser?.role?.split(' - ')[0].toLowerCase() || 'developer';
     
     // Simular la transición y luego navegar
     setTimeout(() => {
-      navigate('/homePage');
+      navigate(`/${baseRole}/homePage`);
     }, 300);
   };
   
   // Manejar la navegación a izquierda en el carrusel
   const handlePrevious = () => {
+    if (isLoggingOut) return; // No permitir cambios durante cierre de sesión
+    
     setActiveMenuIndex((prevIndex) => 
       prevIndex <= 0 ? menuOptions.length - 1 : prevIndex - 1
     );
@@ -120,6 +159,8 @@ const DevReferralsPage = () => {
   
   // Manejar la navegación a derecha en el carrusel
   const handleNext = () => {
+    if (isLoggingOut) return; // No permitir cambios durante cierre de sesión
+    
     setActiveMenuIndex((prevIndex) => 
       prevIndex >= menuOptions.length - 1 ? 0 : prevIndex + 1
     );
@@ -127,7 +168,12 @@ const DevReferralsPage = () => {
   
   // Manejar clic en una opción del menú
   const handleMenuOptionClick = (optionIndex) => {
+    if (isLoggingOut) return; // No permitir cambios durante cierre de sesión
+    
     setActiveMenuIndex(optionIndex);
+    
+    // Extraer el rol base para la navegación
+    const baseRole = currentUser?.role?.split(' - ')[0].toLowerCase() || 'developer';
     
     // Si se selecciona "Create New Referral", navegar a la página correspondiente
     if (menuOptions[optionIndex].name === "Create New Referral") {
@@ -135,7 +181,7 @@ const DevReferralsPage = () => {
       
       // Simular la transición y luego navegar
       setTimeout(() => {
-        navigate('/createNewReferral');
+        navigate(`/${baseRole}/createNewReferral`);
       }, 300);
       return; // Para evitar actualizar el índice si vamos a navegar a otra página
     }
@@ -173,9 +219,17 @@ const DevReferralsPage = () => {
 
   return (
     <div 
-      className={`referrals-dashboard ${menuTransitioning ? 'transitioning' : ''}`}
+      className={`referrals-dashboard ${menuTransitioning ? 'transitioning' : ''} ${isLoggingOut ? 'logging-out' : ''}`}
       ref={containerRef}
     >
+      {/* Animación de cierre de sesión - Mostrar solo cuando se está cerrando sesión */}
+      {isLoggingOut && (
+        <LogoutAnimation 
+          isMobile={isMobile} 
+          onAnimationComplete={handleLogoutAnimationComplete} 
+        />
+      )}
+      
       {/* Fondo con efecto parallax */}
       <div 
         className="parallax-background"
@@ -187,7 +241,7 @@ const DevReferralsPage = () => {
       </div>
       
       {/* Indicador flotante mejorado para cambiar al menú principal */}
-      {showMenuSwitch && (
+      {showMenuSwitch && !isLoggingOut && (
         <div 
           className="menu-switch-indicator"
           onClick={handleMainMenuTransition}
@@ -199,7 +253,7 @@ const DevReferralsPage = () => {
       )}
       
       {/* Header con logo y perfil */}
-      <header className="main-header">
+      <header className={`main-header ${isLoggingOut ? 'logging-out' : ''}`}>
         <div className="header-container">
           {/* Logo con efecto neón */}
           <div className="logo-container">
@@ -213,6 +267,7 @@ const DevReferralsPage = () => {
               className="nav-button main-menu" 
               onClick={handleMainMenuTransition}
               title="Volver al menú principal"
+              disabled={isLoggingOut}
             >
               <i className="fas fa-th-large"></i>
               <span>Menú Principal</span>
@@ -221,6 +276,7 @@ const DevReferralsPage = () => {
             <button 
               className="nav-button referrals-menu active" 
               title="Menú de Referrals"
+              disabled={isLoggingOut}
             >
               <i className="fas fa-file-medical"></i>
               <span>Referrals</span>
@@ -229,7 +285,12 @@ const DevReferralsPage = () => {
           
           {/* Carrusel en la parte superior - versión 3D */}
           <div className="top-carousel" ref={menuRef}>
-            <button className="carousel-arrow left" onClick={handlePrevious} aria-label="Previous">
+            <button 
+              className="carousel-arrow left" 
+              onClick={handlePrevious} 
+              aria-label="Previous"
+              disabled={isLoggingOut}
+            >
               <div className="arrow-icon">
                 <i className="fas fa-chevron-left"></i>
               </div>
@@ -264,7 +325,12 @@ const DevReferralsPage = () => {
               ))}
             </div>
             
-            <button className="carousel-arrow right" onClick={handleNext} aria-label="Next">
+            <button 
+              className="carousel-arrow right" 
+              onClick={handleNext} 
+              aria-label="Next"
+              disabled={isLoggingOut}
+            >
               <div className="arrow-icon">
                 <i className="fas fa-chevron-right"></i>
               </div>
@@ -275,7 +341,7 @@ const DevReferralsPage = () => {
           <div className="support-user-profile" ref={userMenuRef}>
             <div 
               className={`support-profile-button ${showUserMenu ? 'active' : ''}`} 
-              onClick={() => setShowUserMenu(!showUserMenu)}
+              onClick={() => !isLoggingOut && setShowUserMenu(!showUserMenu)}
               data-tooltip="Your profile and settings"
             >
               <div className="support-avatar">
@@ -292,7 +358,7 @@ const DevReferralsPage = () => {
             </div>
             
             {/* Menú desplegable del usuario mejorado con estadísticas */}
-            {showUserMenu && (
+            {showUserMenu && !isLoggingOut && (
               <div className="support-user-menu">
                 <div className="support-menu-header">
                   <div className="support-user-info">
@@ -395,7 +461,7 @@ const DevReferralsPage = () => {
       </header>
       
       {/* Contenido principal */}
-      <main className="main-content">
+      <main className={`main-content ${isLoggingOut ? 'fade-out' : ''}`}>
         <div className="referrals-container">
           <h1 className="referrals-title">Referral Management</h1>
           <p className="referrals-subtitle">Select an option from the menu above to manage referrals</p>
