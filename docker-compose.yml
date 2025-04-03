@@ -42,6 +42,9 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+    networks:
+      - db_network
+
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
@@ -54,5 +57,5 @@ volumes:
     name: IA_JJ_postgres-data
 
 networks:
-  default:
-    name: IA_JJ_default
+  db_network: 
+    driver: bridge
