@@ -31,6 +31,14 @@ def buscar_terapeuta(nombre: str, db: Session = Depends(get_db)):
 
 @router.get("/pacientes/", response_model=dict)
 def obtener_lista_pacientes(skip: int = 0, limit: int = 100, activos: Optional[bool] = None, db: Session = Depends(get_db)):
+
+    if skip < 0:
+        raise HTTPException(status_code=400, detail="Limit debe ser mayor a 0")
+    if limit < 1:
+        raise HTTPException(status_code=400, detail="Limit debe ser mayor a 0")
+    if limit > 100:
+        limit = 100
+
     query = db.query(Pacientes)
     if activos is not None:
         query = query.filter(Pacientes.activo == activos)
@@ -51,6 +59,10 @@ def obtener_pacientes_agencia(agency_id: int, activos: Optional[bool] = None, db
 @router.get("/pacientes/perfil/{nombre}", response_model=dict)
 def obtener_perfil_paciente(nombre: str, db: Session = Depends(get_db)):
     paciente = db.query(Pacientes).filter(Pacientes.patient_name.ilike(f"%{nombre}%")).first()
+
+    if not paciente:
+        paciente = db.query(Pacientes).filter(Pacientes.patient_name.ilike(f"%{nombre}%")).first()
+        
     if not paciente:
         raise HTTPException(status_code=404, detail="Paciente no encontrado")
 

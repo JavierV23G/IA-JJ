@@ -157,36 +157,63 @@ def actualizar_visita(
     notas: Optional[str] = None,
     firma_terapeuta: Optional[bool] = None,
     firma_paciente: Optional[bool] = None,
+    reopen: Optional[bool] = False,
     db: Session = Depends(get_db)
 ):
     visita = db.query(Visitas).filter(Visitas.id == visita_id).first()
     if not visita:
         raise HTTPException(status_code=404, detail="Visita no encontrada")
 
+    # Check if visit is completed and not reopening
+    if visita.estado == "Completed" and not reopen:
+        raise HTTPException(
+            status_code=400, 
+            detail="No se puede modificar una visita completada. Use reopen=true para reabrir"
+        )
+
     update_data = {}
-    if tipo_visita is not None:
-        valid_types = ["EVAL", "STANDARD", "DC", "RA"]
-        if tipo_visita not in valid_types:
-            raise HTTPException(status_code=400, detail=f"Tipo de visita inválido. Debe ser uno de: {', '.join(valid_types)}")
-        update_data["tipo_visita"] = tipo_visita
-    if notas is not None:
-        update_data["notas"] = notas
-    if firma_terapeuta is not None:
-        update_data["firma_terapeuta"] = firma_terapeuta
-    if firma_paciente is not None:
-        update_data["firma_paciente"] = firma_paciente
 
-    notas_empty = db.query(Visitas.notas.is_(None) | (Visitas.notas == "")).filter(Visitas.id == visita_id).scalar()
-    firma_t_empty = db.query(~Visitas.firma_terapeuta).filter(Visitas.id == visita_id).scalar()
-    firma_p_empty = db.query(~Visitas.firma_paciente).filter(Visitas.id == visita_id).scalar()
-
-    if notas_empty and firma_t_empty and firma_p_empty:
-        update_data["estado"] = "No Info"
-    elif not notas_empty and not firma_t_empty and not firma_p_empty:
-        update_data["estado"] = "Completed"
+    # Handle reopening
+    if reopen and visita.estado == "Completed":
+        update_data = {
+            "firma_terapeuta": False,
+            "firma_paciente": False,
+            "estado": "Partial"
+        }
     else:
-        update_data["estado"] = "Partial"
+        # Normal update flow
+        if tipo_visita is not None:
+            valid_types = ["EVAL", "STANDARD", "DC", "RA"]
+            if tipo_visita not in valid_types:
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"Tipo de visita inválido. Debe ser uno de: {', '.join(valid_types)}"
+                )
+            update_data["tipo_visita"] = tipo_visita
+        
+        if notas is not None:
+            update_data["notas"] = notas
+        if firma_terapeuta is not None:
+            update_data["firma_terapeuta"] = firma_terapeuta
+        if firma_paciente is not None:
+            update_data["firma_paciente"] = firma_paciente
 
+        # Update visit status based on current state
+        notas_empty = not visita.notas or visita.notas.strip() == ""
+        if notas is not None:
+            notas_empty = not notas or notas.strip() == ""
+
+        firma_t = visita.firma_terapeuta if firma_terapeuta is None else firma_terapeuta
+        firma_p = visita.firma_paciente if firma_paciente is None else firma_paciente
+
+        if notas_empty and not firma_t and not firma_p:
+            update_data["estado"] = "No Info"
+        elif not notas_empty and firma_t and firma_p:
+            update_data["estado"] = "Completed"
+        else:
+            update_data["estado"] = "Partial"
+
+    # Apply updates
     for key, value in update_data.items():
         setattr(visita, key, value)
 

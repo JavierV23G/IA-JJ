@@ -2,8 +2,8 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from database.connection import get_db
-from database.models import Agencias, Pacientes, Terapistas, CertificationPeriods, Visitas
-from schemas import PacienteCreate, AgenciaCreate, TerapeutaCreate, CertificationPeriodCreate, VisitaCreate
+from database.models import Agencias, Pacientes, Terapistas, CertificationPeriods, Visitas, PacienteTerapeuta
+from schemas import PacienteCreate, AgenciaCreate, TerapeutaCreate, CertificationPeriodCreate, VisitaCreate, TerapistaAsignacion
 
 router = APIRouter()
 
@@ -13,14 +13,43 @@ def crear_paciente(paciente: PacienteCreate, db: Session = Depends(get_db)):
     if not agencia:
         raise HTTPException(status_code=404, detail="Agencia no encontrada")
 
-    db_paciente = Pacientes(**paciente.dict())
+    db_paciente = Pacientes(**paciente.dict(exclude={"cert_period"}))
     db.add(db_paciente)
+    db.flush()
+
+    start_date = datetime.strptime(paciente.cert_period, "%Y-%m-%d") if paciente.cert_period else datetime.utcnow()
+    end_date = start_date + timedelta(days=60)
+    db_paciente.cert_period = start_date.strftime("%Y-%m-%d")
+    cert_period = CertificationPeriods(
+        paciente_id=db_paciente.id_paciente,
+        start_date=start_date,
+        end_date=end_date,
+        is_active=True,
+        created_at=datetime.utcnow()
+    )
+    db.add(cert_period)
     db.commit()
     db.refresh(db_paciente)
-    return db_paciente
+    
+    return {
+        "paciente": db_paciente,
+        "cert_period": {
+            "start_date": cert_period.start_date.strftime("%Y-%m-%d"),
+            "end_date": cert_period.end_date.strftime("%Y-%m-%d"),
+            "is_active": cert_period.is_active
+        },
+    }
 
 @router.post("/agencias/")
 def crear_agencia(agencia: AgenciaCreate, db: Session = Depends(get_db)):
+    existing_username = db.query(Agencias).filter(Agencias.username == agencia.username).first()
+    if existing_username:
+        raise HTTPException(status_code=400, detail="Username ya está en uso")
+
+    existing_email = db.query(Agencias).filter(Agencias.email == agencia.email).first()
+    if existing_email:
+        raise HTTPException(status_code=400, detail="Email ya está registrado")
+
     db_agencia = Agencias(**agencia.dict())
     db.add(db_agencia)
     db.commit()
@@ -37,13 +66,24 @@ def crear_terapeuta(terapeuta: TerapeutaCreate, db: Session = Depends(get_db)):
 
 @router.post("/visitas/")
 def crear_visita(visita: VisitaCreate, db: Session = Depends(get_db)):
+    assignment = db.query(PacienteTerapeuta).filter(
+        PacienteTerapeuta.paciente_id == visita.paciente_id,
+        PacienteTerapeuta.terapeuta_id == visita.terapeuta_id
+    ).first()
+    
+    if not assignment:
+        raise HTTPException(
+            status_code=400, 
+            detail="El terapeuta no está asignado a este paciente"
+        )
+
     cert_period = db.query(CertificationPeriods)\
         .filter(
             CertificationPeriods.id == visita.cert_period_id,
-            CertificationPeriods.paciente_id == visita.paciente_id
+            CertificationPeriods.is_active == True
         ).first()
     if not cert_period:
-        raise HTTPException(status_code=404, detail="Periodo de certificación no encontrado")
+        raise HTTPException(status_code=404, detail="Periodo de certificación no encontrado o inactivo")
 
     valid_types = ["EVAL", "STANDARD", "DC", "RA"]
     if visita.tipo_visita not in valid_types:
@@ -58,7 +98,8 @@ def crear_visita(visita: VisitaCreate, db: Session = Depends(get_db)):
         fecha=datetime.now(),
         tipo_visita=visita.tipo_visita,
         cert_period_id=visita.cert_period_id,
-        estado="Scheduled"
+        estado="Scheduled",
+        notas=visita.notas
     )
 
     db.add(nueva_visita)
@@ -83,7 +124,8 @@ def crear_cert_period(
         paciente_id=paciente_id,
         start_date=start_date,
         end_date=end_date,
-        is_active=True
+        is_active=True,
+        created_at=datetime.utcnow()
     )
 
     db.add(nuevo_cert)
@@ -96,4 +138,42 @@ def crear_cert_period(
         "end_date": nuevo_cert.end_date.strftime("%Y-%m-%d"),
         "is_active": nuevo_cert.is_active,
         "paciente_id": nuevo_cert.paciente_id
+    }
+
+#ASIGNAR
+
+@router.post("/pacientes/{paciente_id}/terapistas")
+def asignar_terapista(
+    paciente_id: int, 
+    asignacion: TerapistaAsignacion, 
+    db: Session = Depends(get_db)
+):
+    paciente = db.query(Pacientes).filter(Pacientes.id_paciente == paciente_id).first()
+    if not paciente:
+        raise HTTPException(status_code=404, detail="Paciente no encontrado")
+        
+    terapeuta = db.query(Terapistas).filter(Terapistas.user_id == asignacion.therapist_id).first()
+    if not terapeuta:
+        raise HTTPException(status_code=404, detail="Terapeuta no encontrado")
+
+    # Check if assignment already exists
+    existing = db.query(PacienteTerapeuta).filter(
+        PacienteTerapeuta.paciente_id == paciente_id,
+        PacienteTerapeuta.terapeuta_id == asignacion.therapist_id
+    ).first()
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="Terapeuta ya está asignado a este paciente")
+
+    asignacion_db = PacienteTerapeuta(
+        paciente_id=paciente_id,
+        terapeuta_id=asignacion.therapist_id
+    )
+    db.add(asignacion_db)
+    db.commit()
+    
+    return {
+        "message": "Terapeuta asignado exitosamente",
+        "paciente_id": paciente_id,
+        "terapeuta_id": asignacion.therapist_id
     }

@@ -45,9 +45,8 @@ class PacienteBase(BaseModel):
     contact_info: str
     discipline: str
     payor_type: str
-    cert_period: str
+    cert_period: Optional[str] = None
     agency: int
-    physician: str
     activo: Optional[bool] = True
 
 class PacienteCreate(PacienteBase):
@@ -56,6 +55,7 @@ class PacienteCreate(PacienteBase):
 class Paciente(PacienteBase):
     id_paciente: int
     cert_periods: List['CertificationPeriodResponse'] = []
+    cert_period: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -69,6 +69,12 @@ class PacienteTerapeutaCreate(PacienteTerapeutaBase):
 
 class PacienteTerapeuta(PacienteTerapeutaBase):
     id: int
+
+    class Config:
+        from_attributes = True
+
+class TerapistaAsignacion(BaseModel):
+    therapist_id: int
 
     class Config:
         from_attributes = True

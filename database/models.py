@@ -40,9 +40,8 @@ class Pacientes(Base):
     contact_info = Column(String(255))
     discipline = Column(String(255))
     payor_type = Column(String(255))
-    cert_period = Column(String(255))
+    cert_period = Column(String(255), nullable=True)
     agency = Column(Integer, ForeignKey('agencias.id_agency'))
-    physician = Column(String(255))
     activo = Column(Boolean)
     
     agencia = relationship("Agencias", back_populates="pacientes")
