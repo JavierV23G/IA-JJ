@@ -103,6 +103,18 @@ const Login = ({ onForgotPassword }) => {
       documents: "ID-54321",
       zip_code: "90211",
       birth_date: "1985-10-20"
+    
+    },
+    {
+      username: "Carlo1", 
+      password: "Carlo12*",
+      fullname: "Carlo Gianzon",
+      email: "Carlo@example.com",
+      role: "PTA",
+      contact_number: "555-987-6543",
+      documents: "ID-54321",
+      zip_code: "90211",
+      birth_date: "1985-10-20"
     }
   ];
 

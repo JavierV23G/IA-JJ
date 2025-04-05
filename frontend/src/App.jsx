@@ -1,5 +1,5 @@
 import React from 'react';
-import { HashRouter, Routes, Route, Navigate, Outlet  } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider } from './components/login/AuthContext';
 import ProtectedRoute from './components/login/ProtectedRoute';
 import RoleBasedRoute from './components/login/RoleBasedRoute';
@@ -34,14 +34,11 @@ import AdminUserProfile from './components/admin/profile/UserProfile';
 
 // Importar componentes para PT, OT, ST (Therapists)
 import TBHomePage from './components/pt-ot-st/welcome/Welcome';
-import TBSupportPage from './components/pt-ot-st/support/SupportPage';
-import TBReferralsPage from './components/pt-ot-st/referrals/ReferralsPage';
-import TBCreateNF from './components/pt-ot-st/referrals/CreateNF/CreateNF';
+import TBSupportPage from './components/pt-ot-st/support/SupportPage'; // No se usará por restricción
 import TBPatientsPage from './components/pt-ot-st/patients/PatientsPage';
-import TBStaffingPage from './components/pt-ot-st/patients/staffing/StaffingPage';
 import TBInfoPaciente from './components/pt-ot-st/patients/Patients/InfoPaciente/InfoPaciente';
-import TBAccounting from './components/pt-ot-st/accounting/Accounting';
 import TBUserProfile from './components/pt-ot-st/profile/UserProfile';
+import TBReferralsPage from './components/pt-ot-st/referrals/ReferralsPage'; // Componente para referrals de terapeutas
 
 // Importar estilos para componentes nuevos
 import './styles/Login/Login.scss';
@@ -55,6 +52,11 @@ import './styles/Login/ResetPassword.scss';
 
 // Importar Font Awesome
 import '@fortawesome/fontawesome-free/css/all.min.css';
+
+// Define therapy roles para simplificar verificaciones
+const THERAPY_ROLES = ['PT', 'OT', 'ST', 'PTA', 'COTA', 'STA'];
+const ADMIN_ROLES = ['Administrator', 'Developer'];
+const ALL_ROLES = [...THERAPY_ROLES, ...ADMIN_ROLES, 'Supportive', 'Support', 'Agency'];
 
 function App() {
   return (
@@ -79,7 +81,7 @@ function App() {
                 {/* Ruta para redireccionar al home basado en el rol */}
                 <Route path="/home" element={<RoleRedirect />} />
                 
-                {/* Rutas específicas para Developer */}
+                {/* Rutas específicas para Developer - con acceso completo */}
                 <Route element={<RoleBasedRoute allowedRoles={['Developer']} />}>
                   <Route path="/developer/homePage" element={<DevHomePage />} />
                   <Route path="/developer/support" element={<DevSupportPage />} />
@@ -92,10 +94,9 @@ function App() {
                   <Route path="/developer/profile" element={<DevUserProfile />} />
                 </Route>
                 
-                {/* Rutas específicas para Administrator */}
+                {/* Rutas específicas para Administrator - sin acceso a support */}
                 <Route element={<RoleBasedRoute allowedRoles={['Administrator']} />}>
                   <Route path="/administrator/homePage" element={<AdminHomePage />} />
-                  <Route path="/administrator/support" element={<AdminSupportPage />} />
                   <Route path="/administrator/referrals" element={<AdminReferralsPage />} />
                   <Route path="/administrator/createNewReferral" element={<AdminCreateNF />} />
                   <Route path="/administrator/patients" element={<AdminPatientsPage />} />
@@ -105,120 +106,109 @@ function App() {
                   <Route path="/administrator/profile" element={<AdminUserProfile />} />
                 </Route>
                 
-                {/* Rutas específicas para PT */}
+                {/* Support page - SOLO para Developers */}
+                <Route element={<RoleBasedRoute allowedRoles={['Developer']} />}>
+                  <Route path="/support" element={<DevSupportPage />} />
+                </Route>
+                
+                {/* Rutas de Accounting y System Management - SOLO para Admins y Developers */}
+                <Route element={<RoleBasedRoute allowedRoles={['Administrator', 'Developer']} />}>
+                  <Route path="/accounting" element={<RoleRedirect />} />
+                  <Route path="/management" element={<RoleRedirect />} />
+                </Route>
+                
+                {/* Rutas de Referrals - para TODOS los roles */}
+                <Route element={<RoleBasedRoute allowedRoles={ALL_ROLES} />}>
+                  <Route path="/referrals" element={<RoleRedirect />} />
+                </Route>
+                
+                {/* Ruta de CreateNewReferral - SOLO para admins */}
+                <Route element={<RoleBasedRoute allowedRoles={ADMIN_ROLES} />}>
+                  <Route path="/createNewReferral" element={<RoleRedirect />} />
+                  <Route path="/staffing" element={<RoleRedirect />} />
+                </Route>
+                
+                {/* Rutas específicas para PT con acceso a referrals */}
                 <Route element={<RoleBasedRoute allowedRoles={['PT', 'PT - Administrator']} />}>
                   <Route path="/pt/homePage" element={<TBHomePage />} />
-                  <Route path="/pt/support" element={<TBSupportPage />} />
-                  <Route path="/pt/referrals" element={<TBReferralsPage />} />
-                  <Route path="/pt/createNewReferral" element={<TBCreateNF />} />
                   <Route path="/pt/patients" element={<TBPatientsPage />} />
                   <Route path="/pt/paciente/:patientId" element={<TBInfoPaciente />} />
-                  <Route path="/pt/staffing" element={<TBStaffingPage />} />
-                  <Route path="/pt/accounting" element={<TBAccounting />} />
                   <Route path="/pt/profile" element={<TBUserProfile />} />
+                  <Route path="/pt/referrals" element={<TBReferralsPage />} />
                 </Route>
                 
-                {/* Rutas específicas para OT */}
+                {/* Rutas específicas para OT con acceso a referrals */}
                 <Route element={<RoleBasedRoute allowedRoles={['OT', 'OT - Administrator']} />}>
                   <Route path="/ot/homePage" element={<TBHomePage />} />
-                  <Route path="/ot/support" element={<TBSupportPage />} />
-                  <Route path="/ot/referrals" element={<TBReferralsPage />} />
-                  <Route path="/ot/createNewReferral" element={<TBCreateNF />} />
                   <Route path="/ot/patients" element={<TBPatientsPage />} />
                   <Route path="/ot/paciente/:patientId" element={<TBInfoPaciente />} />
-                  <Route path="/ot/staffing" element={<TBStaffingPage />} />
-                  <Route path="/ot/accounting" element={<TBAccounting />} />
                   <Route path="/ot/profile" element={<TBUserProfile />} />
+                  <Route path="/ot/referrals" element={<TBReferralsPage />} />
                 </Route>
                 
-                {/* Rutas específicas para ST */}
+                {/* Rutas específicas para ST con acceso a referrals */}
                 <Route element={<RoleBasedRoute allowedRoles={['ST', 'ST - Administrator']} />}>
                   <Route path="/st/homePage" element={<TBHomePage />} />
-                  <Route path="/st/support" element={<TBSupportPage />} />
-                  <Route path="/st/referrals" element={<TBReferralsPage />} />
-                  <Route path="/st/createNewReferral" element={<TBCreateNF />} />
                   <Route path="/st/patients" element={<TBPatientsPage />} />
                   <Route path="/st/paciente/:patientId" element={<TBInfoPaciente />} />
-                  <Route path="/st/staffing" element={<TBStaffingPage />} />
-                  <Route path="/st/accounting" element={<TBAccounting />} />
                   <Route path="/st/profile" element={<TBUserProfile />} />
+                  <Route path="/st/referrals" element={<TBReferralsPage />} />
                 </Route>
                 
-                {/* Rutas específicas para PTA */}
+                {/* Rutas específicas para PTA con acceso a referrals */}
                 <Route element={<RoleBasedRoute allowedRoles={['PTA']} />}>
                   <Route path="/pta/homePage" element={<TBHomePage />} />
-                  <Route path="/pta/support" element={<TBSupportPage />} />
-                  <Route path="/pta/referrals" element={<TBReferralsPage />} />
-                  <Route path="/pta/createNewReferral" element={<TBCreateNF />} />
                   <Route path="/pta/patients" element={<TBPatientsPage />} />
                   <Route path="/pta/paciente/:patientId" element={<TBInfoPaciente />} />
-                  <Route path="/pta/staffing" element={<TBStaffingPage />} />
-                  <Route path="/pta/accounting" element={<TBAccounting />} />
                   <Route path="/pta/profile" element={<TBUserProfile />} />
+                  <Route path="/pta/referrals" element={<TBReferralsPage />} />
                 </Route>
                 
-                {/* Rutas específicas para COTA */}
+                {/* Rutas específicas para COTA con acceso a referrals */}
                 <Route element={<RoleBasedRoute allowedRoles={['COTA']} />}>
                   <Route path="/cota/homePage" element={<TBHomePage />} />
-                  <Route path="/cota/support" element={<TBSupportPage />} />
-                  <Route path="/cota/referrals" element={<TBReferralsPage />} />
-                  <Route path="/cota/createNewReferral" element={<TBCreateNF />} />
                   <Route path="/cota/patients" element={<TBPatientsPage />} />
                   <Route path="/cota/paciente/:patientId" element={<TBInfoPaciente />} />
-                  <Route path="/cota/staffing" element={<TBStaffingPage />} />
-                  <Route path="/cota/accounting" element={<TBAccounting />} />
                   <Route path="/cota/profile" element={<TBUserProfile />} />
+                  <Route path="/cota/referrals" element={<TBReferralsPage />} />
                 </Route>
                 
-                {/* Rutas específicas para STA */}
+                {/* Rutas específicas para STA con acceso a referrals */}
                 <Route element={<RoleBasedRoute allowedRoles={['STA']} />}>
                   <Route path="/sta/homePage" element={<TBHomePage />} />
-                  <Route path="/sta/support" element={<TBSupportPage />} />
-                  <Route path="/sta/referrals" element={<TBReferralsPage />} />
-                  <Route path="/sta/createNewReferral" element={<TBCreateNF />} />
                   <Route path="/sta/patients" element={<TBPatientsPage />} />
                   <Route path="/sta/paciente/:patientId" element={<TBInfoPaciente />} />
-                  <Route path="/sta/staffing" element={<TBStaffingPage />} />
-                  <Route path="/sta/accounting" element={<TBAccounting />} />
                   <Route path="/sta/profile" element={<TBUserProfile />} />
+                  <Route path="/sta/referrals" element={<TBReferralsPage />} />
                 </Route>
                 
-                {/* Rutas específicas para Supportive */}
+                {/* Rutas específicas para Supportive/Support con acceso a referrals */}
                 <Route element={<RoleBasedRoute allowedRoles={['Supportive', 'Support']} />}>
                   <Route path="/supportive/homePage" element={<TBHomePage />} />
-                  <Route path="/supportive/support" element={<TBSupportPage />} />
-                  <Route path="/supportive/referrals" element={<TBReferralsPage />} />
-                  <Route path="/supportive/createNewReferral" element={<TBCreateNF />} />
                   <Route path="/supportive/patients" element={<TBPatientsPage />} />
                   <Route path="/supportive/paciente/:patientId" element={<TBInfoPaciente />} />
-                  <Route path="/supportive/staffing" element={<TBStaffingPage />} />
-                  <Route path="/supportive/accounting" element={<TBAccounting />} />
                   <Route path="/supportive/profile" element={<TBUserProfile />} />
+                  <Route path="/supportive/referrals" element={<TBReferralsPage />} />
                 </Route>
                 
-                {/* Rutas específicas para Agency */}
+                {/* Rutas específicas para Agency con acceso a referrals */}
                 <Route element={<RoleBasedRoute allowedRoles={['Agency']} />}>
                   <Route path="/agency/homePage" element={<TBHomePage />} />
-                  <Route path="/agency/support" element={<TBSupportPage />} />
-                  <Route path="/agency/referrals" element={<TBReferralsPage />} />
-                  <Route path="/agency/createNewReferral" element={<TBCreateNF />} />
                   <Route path="/agency/patients" element={<TBPatientsPage />} />
                   <Route path="/agency/paciente/:patientId" element={<TBInfoPaciente />} />
-                  <Route path="/agency/staffing" element={<TBStaffingPage />} />
-                  <Route path="/agency/accounting" element={<TBAccounting />} />
                   <Route path="/agency/profile" element={<TBUserProfile />} />
+                  <Route path="/agency/referrals" element={<TBReferralsPage />} />
                 </Route>
                 
-                {/* Rutas legacy (para compatibilidad con código existente) */}
+                {/* Ruta para pacientes - disponible para todos los roles */}
+                <Route element={<RoleBasedRoute allowedRoles={ALL_ROLES} />}>
+                  <Route path="/patients" element={<RoleRedirect />} />
+                  <Route path="/paciente/:patientId" element={<RoleRedirect />} />
+                  <Route path="/profile" element={<RoleRedirect />} />
+                </Route>
+                
+                {/* Ruta por defecto para homePage */}
                 <Route path="/homePage" element={<RoleRedirect />} />
-                <Route path="/support" element={<RoleRedirect />} />
-                <Route path="/referrals" element={<RoleRedirect />} />
-                <Route path="/createNewReferral" element={<RoleRedirect />} />
-                <Route path="/patients" element={<RoleRedirect />} />
-                <Route path="/paciente/:patientId" element={<RoleRedirect />} />
-                <Route path="/staffing" element={<RoleRedirect />} />
-                <Route path="/accounting" element={<RoleRedirect />} />
-                <Route path="/profile" element={<RoleRedirect />} />
               </Route>
             </Route>
             

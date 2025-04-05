@@ -25,23 +25,72 @@ const Header = ({ onLogout }) => {
   const menuRef = useRef(null);
   
   // Extraer el rol base y el rol completo para usar en las rutas
-  const baseRole = currentUser?.role?.split(' - ')[0].toLowerCase() || 'developer';
-  const fullRoleFormatted = currentUser?.role?.toLowerCase().replace(/ /g, '-') || 'developer';
+  const roleData = getRoleInfo(currentUser?.role);
+  const baseRole = roleData.baseRole;
+  const roleType = roleData.roleType;
   
   // Detectar si estamos en la página de referrals
   const isReferralsPage = location.pathname.includes('/referrals') || 
                           location.pathname.includes('/createNewReferral');
   
-  // Opciones del menú principal con íconos (para uso por defecto)
-  const defaultMenuOptions = [
-    { id: 1, name: "Patients", icon: "fa-user-injured", route: `/${baseRole}/patients`, color: "#36D1DC" },
-    { id: 2, name: "Referrals", icon: "fa-file-medical", route: `/${baseRole}/referrals`, color: "#FF9966" },
-    { id: 3, name: "Support", icon: "fa-headset", route: `/${baseRole}/support`, color: "#64B5F6" },
-    { id: 4, name: "System Management", icon: "fa-cogs", route: `/${baseRole}/management`, color: "#8B5CF6" },
-    { id: 5, name: "Accounting", icon: "fa-chart-pie", route: `/${baseRole}/accounting`, color: "#4CAF50" }
-  ];
+  // Función para obtener información del rol y determinar qué tipo de usuario es
+  function getRoleInfo(role) {
+    if (!role) return { baseRole: 'developer', roleType: 'admin' };
+    
+    const roleLower = role.toLowerCase();
+    let baseRole = roleLower.split(' - ')[0];
+    let roleType = 'therapist';
+    
+    // Determinar tipo de rol
+    if (baseRole === 'developer') {
+      roleType = 'developer';
+    } else if (baseRole === 'administrator') {
+      roleType = 'admin';
+    } else if (['pt', 'ot', 'st', 'pta', 'cota', 'sta'].includes(baseRole)) {
+      roleType = 'therapist';
+    } else if (['supportive', 'support', 'agency'].includes(baseRole)) {
+      roleType = 'support';
+    }
+    
+    return { baseRole, roleType };
+  }
+  
+  // Función para filtrar menú según el rol del usuario
+  function getFilteredMenuOptions() {
+    // Opciones completas del menú
+    const allMenuOptions = [
+      { id: 1, name: "Patients", icon: "fa-user-injured", route: `/${baseRole}/patients`, color: "#36D1DC" },
+      { id: 2, name: "Referrals", icon: "fa-file-medical", route: `/${baseRole}/referrals`, color: "#FF9966" },
+      { id: 3, name: "Support", icon: "fa-headset", route: `/${baseRole}/support`, color: "#64B5F6" },
+      { id: 4, name: "System Management", icon: "fa-cogs", route: `/${baseRole}/management`, color: "#8B5CF6" },
+      { id: 5, name: "Accounting", icon: "fa-chart-pie", route: `/${baseRole}/accounting`, color: "#4CAF50" }
+    ];
+    
+    // Filtrar según el tipo de rol
+    if (roleType === 'developer') {
+      // Developer ve todas las opciones
+      return allMenuOptions;
+    } else if (roleType === 'admin') {
+      // Admin ve todas excepto Support
+      return allMenuOptions.filter(option => option.name !== "Support");
+    } else if (roleType === 'therapist' || roleType === 'support') {
+      // Terapistas y support ven Patients y Referrals
+      return allMenuOptions.filter(option => 
+        option.name === "Patients" || option.name === "Referrals"
+      );
+    }
+    
+    // Por defecto, mostrar solo Patients y Referrals
+    return allMenuOptions.filter(option => 
+      option.name === "Patients" || option.name === "Referrals"
+    );
+  }
+  
+  // Opciones del menú principal filtradas por rol
+  const defaultMenuOptions = getFilteredMenuOptions();
   
   // Opciones del menú de referrals con iconos y colores personalizados
+  // Solo se mostrarán si el usuario tiene acceso a referrals
   const referralsMenuOptions = [
     { id: 1, name: "Admin Referral Inbox", icon: "fa-inbox", route: `/${baseRole}/referrals/inbox`, color: "#4facfe" },
     { id: 2, name: "Create New Referral", icon: "fa-file-medical", route: `/${baseRole}/createNewReferral`, color: "#ff9966" },
@@ -50,12 +99,14 @@ const Header = ({ onLogout }) => {
     { id: 5, name: "Referral Stats", icon: "fa-chart-bar", route: `/${baseRole}/referrals/stats`, color: "#4CAF50" }
   ];
   
-  // Elegir qué menú mostrar según la ruta actual
-  const menuOptions = isReferralsPage ? referralsMenuOptions : defaultMenuOptions;
+  // Elegir qué menú mostrar según la ruta actual y permisos
+  const menuOptions = isReferralsPage && (roleType === 'developer' || roleType === 'admin') 
+    ? referralsMenuOptions 
+    : defaultMenuOptions;
   
   // Configurar el índice activo basado en la ruta actual
   useEffect(() => {
-    if (isReferralsPage) {
+    if (isReferralsPage && (roleType === 'developer' || roleType === 'admin')) {
       // Encontrar qué opción del menú de referrals coincide mejor con la ruta actual
       const matchingOptionIndex = referralsMenuOptions.findIndex(option => 
         location.pathname.includes(option.route) || 
@@ -83,7 +134,7 @@ const Header = ({ onLogout }) => {
         setActiveMenuIndex(0); // Default para página principal
       }
     }
-  }, [location.pathname, isReferralsPage, baseRole]);
+  }, [location.pathname, isReferralsPage, baseRole, roleType]);
   
   // Usar datos de usuario del contexto de autenticación
   const userData = currentUser ? {
@@ -127,7 +178,7 @@ const Header = ({ onLogout }) => {
   useEffect(() => {
     // Slower rotation on mobile for better readability
     const interval = setInterval(() => {
-      if (!isLoggingOut && !menuTransitioning) {
+      if (!isLoggingOut && !menuTransitioning && menuOptions.length > 1) {
         setActiveMenuIndex((prevIndex) => 
           prevIndex >= menuOptions.length - 1 ? 0 : prevIndex + 1
         );
@@ -186,7 +237,7 @@ const Header = ({ onLogout }) => {
   
   // Handle left carousel navigation
   const handlePrevious = () => {
-    if (isLoggingOut) return; // No permitir cambios durante el cierre de sesión
+    if (isLoggingOut || menuOptions.length <= 1) return; // No permitir cambios durante el cierre de sesión o si solo hay 1 opción
     
     setActiveMenuIndex((prevIndex) => 
       prevIndex <= 0 ? menuOptions.length - 1 : prevIndex - 1
@@ -195,7 +246,7 @@ const Header = ({ onLogout }) => {
   
   // Handle right carousel navigation
   const handleNext = () => {
-    if (isLoggingOut) return; // No permitir cambios durante el cierre de sesión
+    if (isLoggingOut || menuOptions.length <= 1) return; // No permitir cambios durante el cierre de sesión o si solo hay 1 opción
     
     setActiveMenuIndex((prevIndex) => 
       prevIndex >= menuOptions.length - 1 ? 0 : prevIndex + 1
@@ -253,6 +304,11 @@ const Header = ({ onLogout }) => {
     const result = [];
     const totalOptions = menuOptions.length;
     
+    // Si solo hay una opción, solo mostrar esa
+    if (totalOptions === 1) {
+      return [{ ...menuOptions[0], position: 'center' }];
+    }
+    
     // For mobile, show only 3 elements; for tablets and up, show 5
     const visibleItems = isMobile ? 3 : 5;
     const offset = Math.floor(visibleItems / 2);
@@ -261,6 +317,11 @@ const Header = ({ onLogout }) => {
     for (let i = -offset; i <= offset; i++) {
       // Skip far elements on mobile
       if (isMobile && (i === -2 || i === 2)) continue;
+      
+      // Si no hay suficientes opciones, no mostrar espacios vacíos
+      if (totalOptions <= visibleItems && (activeMenuIndex + i < 0 || activeMenuIndex + i >= totalOptions)) {
+        continue;
+      }
       
       const actualIndex = (activeMenuIndex + i + totalOptions) % totalOptions;
       
@@ -281,6 +342,9 @@ const Header = ({ onLogout }) => {
     return result;
   };
 
+  // Mostrar/ocultar flechas de navegación basado en cantidad de opciones
+  const showCarouselArrows = menuOptions.length > 1;
+
   return (
     <>
       <header className={`main-header ${headerGlow ? 'glow-effect' : ''} ${menuTransitioning ? 'transitioning' : ''} ${isLoggingOut ? 'logging-out' : ''}`}>
@@ -290,8 +354,8 @@ const Header = ({ onLogout }) => {
             <div className="logo-glow"></div>
             <img src={logoImg} alt="TherapySync Logo" className="logo" onClick={() => !isLoggingOut && handleMainMenuTransition()} />
             
-            {/* Mostrar botones de navegación en la página de referrals */}
-            {isReferralsPage && (
+            {/* Mostrar botones de navegación en la página de referrals si el usuario tiene acceso */}
+            {isReferralsPage && (roleType === 'developer' || roleType === 'admin') && (
               <div className="menu-navigation">
                 <button 
                   className="nav-button main-menu" 
@@ -315,11 +379,13 @@ const Header = ({ onLogout }) => {
           
           {/* Enhanced carousel with responsive layout */}
           <div className="top-carousel" ref={menuRef}>
-            <button className="carousel-arrow left" onClick={handlePrevious} aria-label="Previous" disabled={isLoggingOut}>
-              <div className="arrow-icon">
-                <i className="fas fa-chevron-left"></i>
-              </div>
-            </button>
+            {showCarouselArrows && (
+              <button className="carousel-arrow left" onClick={handlePrevious} aria-label="Previous" disabled={isLoggingOut}>
+                <div className="arrow-icon">
+                  <i className="fas fa-chevron-left"></i>
+                </div>
+              </button>
+            )}
             
             <div className="carousel-options">
               {getVisibleMenuOptions().map((item) => (
@@ -350,11 +416,13 @@ const Header = ({ onLogout }) => {
               ))}
             </div>
             
-            <button className="carousel-arrow right" onClick={handleNext} aria-label="Next" disabled={isLoggingOut}>
-              <div className="arrow-icon">
-                <i className="fas fa-chevron-right"></i>
-              </div>
-            </button>
+            {showCarouselArrows && (
+              <button className="carousel-arrow right" onClick={handleNext} aria-label="Next" disabled={isLoggingOut}>
+                <div className="arrow-icon">
+                  <i className="fas fa-chevron-right"></i>
+                </div>
+              </button>
+            )}
           </div>
           
           {/* Enhanced user profile with responsive layout */}

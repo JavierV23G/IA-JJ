@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../../styles/developer/Welcome/Welcome.scss';
-import LogoutAnimation from '../../LogOut/LogOut'; // Importación del componente reutilizable
+import LogoutAnimation from '../../LogOut/LogOut'; 
 import InfoWelcome from './infoWelcome';
+import FloatingSupportButton from '../support/FloatingSupportButton';
 import { useAuth } from '../../login/AuthContext';
 import Header from '../../header/Header';
 
@@ -183,8 +184,8 @@ const TPHomePage = () => {
         <InfoWelcome isMobile={isMobile} isTablet={isTablet} />
       </main>
       
-      {/* AI Assistant with conditional loading */}
-      {/* {showAIAssistant && <AIAssistant isMobile={isMobile} />} */}
+      {/* Premium floating support button */}
+      <FloatingSupportButton />
     </div>
   );
 };

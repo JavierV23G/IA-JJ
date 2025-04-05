@@ -1,99 +1,127 @@
 import React, { useState, useEffect, useRef } from 'react';
-import '../../../styles/developer/support/Support.scss';
-import SupportHeader from './SupportHeader.jsx';
-import SupportTickets from './SupportTickets.jsx';
-import SupportKnowledgeBase from './SupportKnowledgeBase.jsx';
-import SupportDashboard from './SupportDashboard.jsx';
-// Importar logo correctamente para asegurar que se muestre
-import logoImg from '../../../assets/LogoMHC.jpeg';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../login/AuthContext';
+import Header from '../../header/Header';
+import FloatingSupportButton from './FloatingSupportButton';
+import '../../../styles/developer/support/SupportPage.scss';
 
-const AdminSupportPage = () => {
-  const [activeSection, setActiveSection] = useState('dashboard');
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadingProgress, setLoadingProgress] = useState(0);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [notificationCount] = useState(7);
-  const backgroundVideoRef = useRef(null);
+const SupportPage = () => {
+  const navigate = useNavigate();
+  const { currentUser, logout } = useAuth();
   
-  // Efecto para cargar la página con animación mejorada
+  // Estados para animaciones y efectos
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [particlesCount, setParticlesCount] = useState(0);
+  const [showArrowAnimation, setShowArrowAnimation] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
+  
+  // Referencias para animaciones
+  const pageRef = useRef(null);
+  const iconRef = useRef(null);
+  const textRef = useRef(null);
+  const timerRefs = useRef([]);
+  
+  // Obtener el rol del usuario desde el contexto
+  const userRole = currentUser?.role || '';
+  
+  // Determinar la URL del panel según el rol
+  const getDashboardUrl = () => {
+    const rolePrefix = userRole.toLowerCase().split(' ')[0]; // Obtener primera parte del rol (ej. "PT" de "PT - Administrator")
+    return `/${rolePrefix}/homePage`;
+  };
+  
+  // Efecto de carga y animaciones
   useEffect(() => {
-    // Simulación de progreso de carga
-    let progress = 0;
-    const progressInterval = setInterval(() => {
-      progress += Math.random() * 15;
-      if (progress > 100) progress = 100;
-      setLoadingProgress(Math.floor(progress));
-      
-      if (progress >= 100) {
-        clearInterval(progressInterval);
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 500); // Pequeño retraso para mostrar el 100% antes de desaparecer
-      }
-    }, 150);
+    // Limpiar timers anteriores
+    timerRefs.current.forEach(timer => clearTimeout(timer));
+    timerRefs.current = [];
     
-    return () => clearInterval(progressInterval);
-  }, []);
-
-  // Controlar el parallax del fondo
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (!backgroundVideoRef.current) return;
+    // Secuencia de animación de entrada
+    const loadSequence = async () => {
+      // Fase 1: Aparecer la página
+      const timer1 = setTimeout(() => {
+        setIsLoaded(true);
+      }, 100);
+      timerRefs.current.push(timer1);
       
-      const x = e.clientX / window.innerWidth;
-      const y = e.clientY / window.innerHeight;
+      // Fase 2: Generar partículas gradualmente
+      await new Promise(resolve => {
+        const timer2 = setTimeout(resolve, 400);
+        timerRefs.current.push(timer2);
+      });
       
-      // Suave efecto parallax en el fondo
-      backgroundVideoRef.current.style.transform = `translate(${x * -20}px, ${y * -20}px)`;
+      for (let i = 0; i < 50; i++) {
+        await new Promise(resolve => {
+          const timer = setTimeout(() => {
+            setParticlesCount(prev => prev + 1);
+            resolve();
+          }, 20);
+          timerRefs.current.push(timer);
+        });
+      }
+      
+      // Fase 3: Mostrar flecha animada
+      await new Promise(resolve => {
+        const timer3 = setTimeout(resolve, 1500);
+        timerRefs.current.push(timer3);
+      });
+      
+      setShowArrowAnimation(true);
     };
     
-    window.addEventListener('mousemove', handleMouseMove);
+    loadSequence();
     
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
+      // Limpiar timers al desmontar
+      timerRefs.current.forEach(timer => clearTimeout(timer));
     };
   }, []);
   
-  // Manejo de cambio de sección
-  const handleSectionChange = (section) => {
-    setActiveSection(section);
+  // Manejar clic en el botón de regreso
+  const handleReturnClick = () => {
+    // Animación de salida
+    setIsLoaded(false);
+    setHasInteracted(true);
+    
+    // Navegar después de la animación
+    setTimeout(() => {
+      navigate(getDashboardUrl());
+    }, 300);
   };
   
-  // Renderizar contenido de la sección activa
-  const renderActiveSection = () => {
-    switch (activeSection) {
-      case 'tickets':
-        return <SupportTickets />;
-      case 'knowledge':
-        return <SupportKnowledgeBase />;
-      default:
-        return <SupportDashboard />;
-    }
+  // Manejar cierre de sesión
+  const handleLogout = () => {
+    // Animación de salida
+    setIsLoaded(false);
+    
+    setTimeout(() => {
+      logout();
+      navigate('/');
+    }, 300);
   };
   
-  // Renderizar partículas de fondo más eficientes y elegantes
+  // Generar partículas aleatorias para el fondo
   const renderParticles = () => {
     const particles = [];
-    const particleCount = 25; // Optimizado para rendimiento
     
-    for (let i = 0; i < particleCount; i++) {
-      const size = Math.random() * 4 + 1;
-      const opacity = Math.random() * 0.12 + 0.03;
-      const delay = Math.random() * 5;
-      const duration = Math.random() * 15 + 10;
+    for (let i = 0; i < particlesCount; i++) {
+      const size = Math.random() * 4 + 2;
+      const opacity = Math.random() * 0.4 + 0.1;
+      const animationDuration = Math.random() * 60 + 40;
+      const animationDelay = Math.random() * 10;
       
       particles.push(
-        <div
+        <div 
           key={i}
-          className="support-particle"
+          className="background-particle"
           style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
             width: `${size}px`,
             height: `${size}px`,
             opacity: opacity,
-            animationDelay: `${delay}s`,
-            animationDuration: `${duration}s`
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            animationDuration: `${animationDuration}s`,
+            animationDelay: `${animationDelay}s`
           }}
         ></div>
       );
@@ -101,80 +129,131 @@ const AdminSupportPage = () => {
     
     return particles;
   };
-  
+
   return (
     <div 
-      className={`support-page ${isLoading ? 'is-loading' : 'is-loaded'}`}
+      className={`support-page ${isLoaded ? 'loaded' : ''} ${hasInteracted ? 'exit' : ''}`}
+      ref={pageRef}
     >
-      {/* Fondo premium con imagen HD y efectos */}
-      <div className="support-background">
-        {/* Imagen de fondo HD con blur controlado */}
-        <div 
-          className="background-image" 
-          ref={backgroundVideoRef}
-          style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1483389127117-b6a2102724ae?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3087&q=80')"
-          }}
-        ></div>
-        
-        {/* Overlay con gradiente refinado */}
-        <div className="support-gradient-overlay"></div>
-        
-        {/* Partículas flotantes elegantes */}
-        <div className="support-particles-container">
+      {/* Fondo con efecto paralaje y partículas */}
+      <div className="support-page-background">
+        <div className="gradient-overlay"></div>
+        <div className="particles-container">
           {renderParticles()}
         </div>
-
-        {/* Efecto de viñeta en las esquinas */}
-        <div className="corner-vignette top-left"></div>
-        <div className="corner-vignette top-right"></div>
-        <div className="corner-vignette bottom-left"></div>
-        <div className="corner-vignette bottom-right"></div>
       </div>
       
-      {/* Animación de carga premium */}
-      {isLoading && (
-        <div className="support-loader">
-          <div className="loader-content">
-            <div className="loader-logo">
-              <div className="logo-pulse"></div>
-              {/* Usar el logo importado correctamente */}
-              <img src={logoImg} alt="TherapySync Logo" />
+      {/* Header con funcionalidad de logout */}
+      <Header onLogout={handleLogout} />
+      
+      {/* Contenido principal */}
+      <main className="support-content">
+        {/* Botón de regreso al dashboard */}
+        <div className="return-home">
+          <button 
+            className="return-button"
+            onClick={handleReturnClick}
+            aria-label="Return to Dashboard"
+          >
+            <div className="button-icon">
+              <i className="fas fa-arrow-left"></i>
             </div>
-            
-            <div className="loader-title">
-              <h2>TherapySync Support</h2>
-            </div>
-            
-            <div className="loader-progress">
-              <div className="progress-track">
-                <div 
-                  className="progress-fill"
-                  style={{ width: `${loadingProgress}%` }}
-                ></div>
+            <span>Return to Dashboard</span>
+            <div className="button-background"></div>
+          </button>
+        </div>
+        
+        {/* Sección central con mensaje de soporte */}
+        <div className="support-placeholder">
+          <div className="content-container">
+            {/* Icono animado */}
+            <div className="support-icon" ref={iconRef}>
+              <div className="icon-outer-ring"></div>
+              <div className="icon-inner-ring"></div>
+              <div className="icon-wrapper">
+                <i className="fas fa-headset"></i>
               </div>
-              <div className="progress-percentage">{loadingProgress}%</div>
+              <div className="icon-particles">
+                {[...Array(8)].map((_, i) => (
+                  <div 
+                    key={i} 
+                    className="icon-particle"
+                    style={{
+                      '--rotation': `${45 * i}deg`,
+                      '--delay': `${i * 0.1}s`
+                    }}
+                  ></div>
+                ))}
+              </div>
             </div>
+            
+            {/* Texto principal */}
+            <div className="support-text" ref={textRef}>
+              <h2>Support Center</h2>
+              <div className="title-underline">
+                <div className="underline-dot"></div>
+                <div className="underline-line"></div>
+                <div className="underline-dot"></div>
+              </div>
+              <p>
+                Our support team is ready to assist you with any questions or issues. 
+                Click the floating support button to open our premium support center 
+                and get the help you need.
+              </p>
+              
+              {/* Características de soporte */}
+              <div className="support-features">
+                <div className="feature-item">
+                  <div className="feature-icon">
+                    <i className="fas fa-bolt"></i>
+                  </div>
+                  <div className="feature-text">
+                    <h4>Fast Response</h4>
+                    <p>Average response time of 30 minutes during business hours</p>
+                  </div>
+                </div>
+                
+                <div className="feature-item">
+                  <div className="feature-icon">
+                    <i className="fas fa-shield-alt"></i>
+                  </div>
+                  <div className="feature-text">
+                    <h4>Expert Support</h4>
+                    <p>Direct access to our experienced technical team</p>
+                  </div>
+                </div>
+                
+                <div className="feature-item">
+                  <div className="feature-icon">
+                    <i className="fas fa-history"></i>
+                  </div>
+                  <div className="feature-text">
+                    <h4>24/7 Availability</h4>
+                    <p>Support available around the clock for critical issues</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Indicador de flecha animada */}
+            {showArrowAnimation && (
+              <div className="arrow-indicator">
+                <div className="arrow-content">
+                  <div className="arrow-animation">
+                    <i className="fas fa-long-arrow-alt-down"></i>
+                  </div>
+                  <p>Click the support button</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      )}
-      
-      {/* Contenido principal con transiciones refinadas */}
-      <div className={`support-content ${isLoading ? 'hidden' : ''}`}>
-        <SupportHeader 
-          activeSection={activeSection}
-          onSectionChange={handleSectionChange}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          notificationCount={notificationCount}
-        />
         
-        <main className="support-main">
-          {renderActiveSection()}
-        </main>
-      </div>
+        {/* Botón flotante de soporte */}
+        <FloatingSupportButton />
+      </main>
     </div>
   );
 };
 
-export default AdminSupportPage;
+export default SupportPage;
