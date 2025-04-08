@@ -9,37 +9,33 @@ import ResetVerifyPage from './components/login/ResetVerifyPage';
 import GeoRestrictionProvider from './components/login/GeoRestrictionProvider';
 import SessionTimeoutContainer from './components/login/SessionTimeoutContainer';
 import ConcurrentSessionContainer from './components/login/ConcurrentSessionContainer';
-
 // Importar componentes para Developer
 import DevHomePage from './components/developer/welcome/Welcome';
 import DevSupportPage from './components/developer/support/SupportPage';
 import DevReferralsPage from './components/developer/referrals/ReferralsPage';
 import DevCreateNF from './components/developer/referrals/CreateNF/CreateNF';
 import DevPatientsPage from './components/developer/patients/PatientsPage';
+import DevPatientInfoPage from './components/developer/patients/Patients/InfoPaciente/PatientInfoPage'; // Nueva ruta actualizada
 import DevStaffingPage from './components/developer/patients/staffing/StaffingPage';
-import DevInfoPaciente from './components/developer/patients/Patients/InfoPaciente/InfoPaciente';
 import DevAccounting from './components/developer/accounting/Accounting';
 import DevUserProfile from './components/developer/profile/UserProfile';
 
-// Importar componentes para Administrator
 import AdminHomePage from './components/admin/welcome/Welcome';
 import AdminSupportPage from './components/admin/support/SupportPage';
 import AdminReferralsPage from './components/admin/referrals/ReferralsPage';
 import AdminCreateNF from './components/admin/referrals/CreateNF/CreateNF';
 import AdminPatientsPage from './components/admin/patients/PatientsPage';
+import AdminPatientInfoPage from './components/admin/patients/Patients/InfoPaciente/PatientInfoPage'; // Nueva ruta actualizada
 import AdminStaffingPage from './components/admin/patients/staffing/StaffingPage';
-import AdminInfoPaciente from './components/admin/patients/Patients/InfoPaciente/InfoPaciente';
 import AdminAccounting from './components/admin/accounting/Accounting';
 import AdminUserProfile from './components/admin/profile/UserProfile';
 
-// Importar componentes para PT, OT, ST (Therapists)
 import TBHomePage from './components/pt-ot-st/welcome/Welcome';
 import TBSupportPage from './components/pt-ot-st/support/SupportPage'; // No se usará por restricción
 import TBPatientsPage from './components/pt-ot-st/patients/PatientsPage';
-import TBInfoPaciente from './components/pt-ot-st/patients/Patients/InfoPaciente/InfoPaciente';
+import TBPatientInfoPage from './components/pt-ot-st/patients/Patients/InfoPaciente/PatientInfoPage'; // Nueva ruta actualizada
 import TBUserProfile from './components/pt-ot-st/profile/UserProfile';
 import TBReferralsPage from './components/pt-ot-st/referrals/ReferralsPage'; // Componente para referrals de terapeutas
-
 // Importar estilos para componentes nuevos
 import './styles/Login/Login.scss';
 import './styles/Login/AuthLoadingModal.scss';
@@ -49,15 +45,12 @@ import './styles/Login/SessionTimeoutWarning.scss';
 import './styles/Login/ConcurrentSessionModal.scss';
 import './styles/Login/GeoRestrictionModal.scss';
 import './styles/Login/ResetPassword.scss';
-
 // Importar Font Awesome
 import '@fortawesome/fontawesome-free/css/all.min.css';
-
 // Define therapy roles para simplificar verificaciones
 const THERAPY_ROLES = ['PT', 'OT', 'ST', 'PTA', 'COTA', 'STA'];
 const ADMIN_ROLES = ['Administrator', 'Developer'];
 const ALL_ROLES = [...THERAPY_ROLES, ...ADMIN_ROLES, 'Supportive', 'Support', 'Agency'];
-
 function App() {
   return (
     <GeoRestrictionProvider>
@@ -88,7 +81,7 @@ function App() {
                   <Route path="/developer/referrals" element={<DevReferralsPage />} />
                   <Route path="/developer/createNewReferral" element={<DevCreateNF />} />
                   <Route path="/developer/patients" element={<DevPatientsPage />} />
-                  <Route path="/developer/paciente/:patientId" element={<DevInfoPaciente />} />
+                  <Route path="/developer/paciente/:patientId" element={<DevPatientInfoPage />} />
                   <Route path="/developer/staffing" element={<DevStaffingPage />} />
                   <Route path="/developer/accounting" element={<DevAccounting />} />
                   <Route path="/developer/profile" element={<DevUserProfile />} />
@@ -100,7 +93,7 @@ function App() {
                   <Route path="/administrator/referrals" element={<AdminReferralsPage />} />
                   <Route path="/administrator/createNewReferral" element={<AdminCreateNF />} />
                   <Route path="/administrator/patients" element={<AdminPatientsPage />} />
-                  <Route path="/administrator/paciente/:patientId" element={<AdminInfoPaciente />} />
+                  <Route path="/administrator/paciente/:patientId" element={<AdminPatientInfoPage />} />
                   <Route path="/administrator/staffing" element={<AdminStaffingPage />} />
                   <Route path="/administrator/accounting" element={<AdminAccounting />} />
                   <Route path="/administrator/profile" element={<AdminUserProfile />} />
@@ -132,7 +125,7 @@ function App() {
                 <Route element={<RoleBasedRoute allowedRoles={['PT', 'PT - Administrator']} />}>
                   <Route path="/pt/homePage" element={<TBHomePage />} />
                   <Route path="/pt/patients" element={<TBPatientsPage />} />
-                  <Route path="/pt/paciente/:patientId" element={<TBInfoPaciente />} />
+                  <Route path="/pt/paciente/:patientId" element={<TBPatientInfoPage />} />
                   <Route path="/pt/profile" element={<TBUserProfile />} />
                   <Route path="/pt/referrals" element={<TBReferralsPage />} />
                 </Route>
@@ -141,7 +134,7 @@ function App() {
                 <Route element={<RoleBasedRoute allowedRoles={['OT', 'OT - Administrator']} />}>
                   <Route path="/ot/homePage" element={<TBHomePage />} />
                   <Route path="/ot/patients" element={<TBPatientsPage />} />
-                  <Route path="/ot/paciente/:patientId" element={<TBInfoPaciente />} />
+                  <Route path="/ot/paciente/:patientId" element={<TBPatientInfoPage />} />
                   <Route path="/ot/profile" element={<TBUserProfile />} />
                   <Route path="/ot/referrals" element={<TBReferralsPage />} />
                 </Route>
@@ -150,7 +143,7 @@ function App() {
                 <Route element={<RoleBasedRoute allowedRoles={['ST', 'ST - Administrator']} />}>
                   <Route path="/st/homePage" element={<TBHomePage />} />
                   <Route path="/st/patients" element={<TBPatientsPage />} />
-                  <Route path="/st/paciente/:patientId" element={<TBInfoPaciente />} />
+                  <Route path="/st/paciente/:patientId" element={<TBPatientInfoPage />} />
                   <Route path="/st/profile" element={<TBUserProfile />} />
                   <Route path="/st/referrals" element={<TBReferralsPage />} />
                 </Route>
@@ -159,7 +152,7 @@ function App() {
                 <Route element={<RoleBasedRoute allowedRoles={['PTA']} />}>
                   <Route path="/pta/homePage" element={<TBHomePage />} />
                   <Route path="/pta/patients" element={<TBPatientsPage />} />
-                  <Route path="/pta/paciente/:patientId" element={<TBInfoPaciente />} />
+                  <Route path="/pta/paciente/:patientId" element={<TBPatientInfoPage />} />
                   <Route path="/pta/profile" element={<TBUserProfile />} />
                   <Route path="/pta/referrals" element={<TBReferralsPage />} />
                 </Route>
@@ -168,7 +161,7 @@ function App() {
                 <Route element={<RoleBasedRoute allowedRoles={['COTA']} />}>
                   <Route path="/cota/homePage" element={<TBHomePage />} />
                   <Route path="/cota/patients" element={<TBPatientsPage />} />
-                  <Route path="/cota/paciente/:patientId" element={<TBInfoPaciente />} />
+                  <Route path="/cota/paciente/:patientId" element={<TBPatientInfoPage />} />
                   <Route path="/cota/profile" element={<TBUserProfile />} />
                   <Route path="/cota/referrals" element={<TBReferralsPage />} />
                 </Route>
@@ -177,7 +170,7 @@ function App() {
                 <Route element={<RoleBasedRoute allowedRoles={['STA']} />}>
                   <Route path="/sta/homePage" element={<TBHomePage />} />
                   <Route path="/sta/patients" element={<TBPatientsPage />} />
-                  <Route path="/sta/paciente/:patientId" element={<TBInfoPaciente />} />
+                  <Route path="/sta/paciente/:patientId" element={<TBPatientInfoPage />} />
                   <Route path="/sta/profile" element={<TBUserProfile />} />
                   <Route path="/sta/referrals" element={<TBReferralsPage />} />
                 </Route>
@@ -186,7 +179,7 @@ function App() {
                 <Route element={<RoleBasedRoute allowedRoles={['Supportive', 'Support']} />}>
                   <Route path="/supportive/homePage" element={<TBHomePage />} />
                   <Route path="/supportive/patients" element={<TBPatientsPage />} />
-                  <Route path="/supportive/paciente/:patientId" element={<TBInfoPaciente />} />
+                  <Route path="/supportive/paciente/:patientId" element={<TBPatientInfoPage />} />
                   <Route path="/supportive/profile" element={<TBUserProfile />} />
                   <Route path="/supportive/referrals" element={<TBReferralsPage />} />
                 </Route>
@@ -195,7 +188,7 @@ function App() {
                 <Route element={<RoleBasedRoute allowedRoles={['Agency']} />}>
                   <Route path="/agency/homePage" element={<TBHomePage />} />
                   <Route path="/agency/patients" element={<TBPatientsPage />} />
-                  <Route path="/agency/paciente/:patientId" element={<TBInfoPaciente />} />
+                  <Route path="/agency/paciente/:patientId" element={<TBPatientInfoPage />} />
                   <Route path="/agency/profile" element={<TBUserProfile />} />
                   <Route path="/agency/referrals" element={<TBReferralsPage />} />
                 </Route>
@@ -220,5 +213,4 @@ function App() {
     </GeoRestrictionProvider>
   );
 }
-
 export default App;

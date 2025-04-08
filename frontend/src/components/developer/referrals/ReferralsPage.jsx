@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../components/login/AuthContext'; // Importar el contexto de autenticación
+import { useAuth } from '../../../components/login/AuthContext';
 import '../../../styles/developer/Referrals/ReferralsPage.scss';
 import logoImg from '../../../assets/LogoMHC.jpeg';
-import LogoutAnimation from '../../../components/LogOut/LogOut'; // Importar el componente de animación
+import LogoutAnimation from '../../../components/LogOut/LogOut';
 
 const DevReferralsPage = () => {
   const navigate = useNavigate();
-  const { currentUser, logout } = useAuth(); // Usar el contexto de autenticación
+  const { currentUser, logout } = useAuth();
   
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [activeMenuIndex, setActiveMenuIndex] = useState(1); // Por defecto en "Create New Referral"
+  const [activeMenuIndex, setActiveMenuIndex] = useState(0); // Por defecto en "Create New Referral"
   const [menuTransitioning, setMenuTransitioning] = useState(false);
   const [showMenuSwitch, setShowMenuSwitch] = useState(false);
   const [parallaxPosition, setParallaxPosition] = useState({ x: 0, y: 0 });
@@ -22,13 +22,10 @@ const DevReferralsPage = () => {
   const menuRef = useRef(null);
   const containerRef = useRef(null);
   
-  // Opciones del menú de referrals con iconos y colores personalizados
+  // Opciones del menú reducidas a solo "Create New Referral" y "Referral Stats"
   const menuOptions = [
-    { id: 1, name: "Admin Referral Inbox", icon: "fa-inbox", route: '/referrals/inbox', color: "#4facfe" },
-    { id: 2, name: "Create New Referral", icon: "fa-file-medical", route: '/referrals/new', color: "#ff9966" },
-    { id: 3, name: "Resend Referral", icon: "fa-paper-plane", route: '/referrals/resend', color: "#00e5ff" },
-    { id: 4, name: "View Referral History", icon: "fa-history", route: '/referrals/history', color: "#8c54ff" },
-    { id: 5, name: "Referral Stats", icon: "fa-chart-bar", route: '/referrals/stats', color: "#4CAF50" }
+    { id: 1, name: "Create New Referral", icon: "fa-file-medical", route: '/referrals/new', color: "#ff9966" },
+    { id: 2, name: "Referral Stats", icon: "fa-chart-bar", route: '/referrals/stats', color: "#4CAF50" }
   ];
 
   // Función para obtener iniciales del nombre
@@ -187,28 +184,28 @@ const DevReferralsPage = () => {
     }
   };
   
-  // Obtener las opciones visibles del menú para el carrusel (5 elementos con diferentes tamaños)
+  // Obtener las opciones visibles del menú para el carrusel
+  // Modificado para manejar solo 2 opciones
   const getVisibleMenuOptions = () => {
     const result = [];
-    const totalOptions = menuOptions.length;
     
-    // Obtener los índices para 5 elementos visibles con el activo en el centro
-    for (let i = -2; i <= 2; i++) {
-      const actualIndex = (activeMenuIndex + i + totalOptions) % totalOptions;
-      
-      // Determinar la posición basada en la distancia al elemento activo
+    // Como solo hay 2 opciones, las mostramos ambas
+    for (let i = 0; i < menuOptions.length; i++) {
+      // Determinar la posición basada en si es el elemento activo
       let position;
-      if (i === -2) position = 'far-left';
-      else if (i === -1) position = 'left';
-      else if (i === 0) position = 'center';
-      else if (i === 1) position = 'right';
-      else position = 'far-right';
+      
+      if (i === activeMenuIndex) {
+        position = 'center';
+      } else {
+        // La otra opción estará a la derecha o izquierda del elemento activo
+        position = i < activeMenuIndex ? 'left' : 'right';
+      }
       
       // Añadir z-index adicional para controlar superposición
-      const zIndex = i === 0 ? 3 : (Math.abs(i) === 1 ? 2 : 1);
+      const zIndex = i === activeMenuIndex ? 3 : 2;
       
       result.push({
-        ...menuOptions[actualIndex],
+        ...menuOptions[i],
         position,
         zIndex
       });
@@ -283,7 +280,7 @@ const DevReferralsPage = () => {
             </button>
           </div>
           
-          {/* Carrusel en la parte superior - versión 3D */}
+          {/* Carrusel en la parte superior - versión simplificada para 2 opciones */}
           <div className="top-carousel" ref={menuRef}>
             <button 
               className="carousel-arrow left" 
@@ -318,9 +315,7 @@ const DevReferralsPage = () => {
                       <div className="active-underline" style={{ background: `linear-gradient(90deg, ${item.color}, ${item.color}80)` }}></div>
                     )}
                   </div>
-                  {item.position === 'center' && (
-                    <div className="option-glow" style={{ boxShadow: `0 0 30px ${item.color}80` }}></div>
-                  )}
+                  
                 </div>
               ))}
             </div>
@@ -375,11 +370,6 @@ const DevReferralsPage = () => {
                       </span>
                     </div>
                   </div>
-                  
-                  {/* Stats cards */}
-                  
-                  {/* Quick action buttons */}
-       
                 </div>
                 
                 <div className="support-menu-section">
@@ -432,7 +422,6 @@ const DevReferralsPage = () => {
                 <div className="support-menu-section">
                   <div className="section-title">Support</div>
                   <div className="support-menu-items">
-      
                     <div className="support-menu-item">
                       <i className="fas fa-headset"></i>
                       <span>Contact Support</span>
