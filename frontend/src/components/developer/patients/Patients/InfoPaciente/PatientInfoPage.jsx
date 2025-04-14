@@ -5,7 +5,9 @@ import logoImg from '../../../../../assets/LogoMHC.jpeg';
 import EmergencyContactsComponent from './EmergencyContactsComponent';
 import CertificationPeriodComponent from './CertificationPeriodComponent';
 import MedicalInfoComponent from './MedicalInfoComponent';
-import DisciplinesComponent from './DisciplinesComponent'; // Importamos el nuevo componente
+import DisciplinesComponent from './DisciplinesComponent';
+import ScheduleComponent from './ScheduleComponent';
+import ExercisesComponent from './ExercisesComponent'; // Importamos el nuevo componente de Ejercicios
 import '../../../../../styles/developer/Patients/InfoPaciente/PatientInfoPage.scss';
 
 // Patient Info Header Component
@@ -228,6 +230,36 @@ const DisciplinesSection = ({ patient }) => {
   );
 };
 
+// Schedule Section Component
+const ScheduleSection = ({ patient }) => {
+  // Handler for schedule updates
+  const handleUpdateSchedule = (updatedSchedule) => {
+    console.log('Schedule updated:', updatedSchedule);
+    // Here you would typically update the state or send data to an API
+  };
+  
+  return (
+    <div className="schedule-section">
+      <ScheduleComponent patient={patient} onUpdateSchedule={handleUpdateSchedule} />
+    </div>
+  );
+};
+
+// Exercises Section Component
+const ExercisesSection = ({ patient }) => {
+  // Handler for exercises updates
+  const handleUpdateExercises = (updatedExercises) => {
+    console.log('Exercises updated:', updatedExercises);
+    // Here you would typically update the state or send data to an API
+  };
+  
+  return (
+    <div className="exercises-section">
+      <ExercisesComponent patient={patient} onUpdateExercises={handleUpdateExercises} />
+    </div>
+  );
+};
+
 // Main Patient Information Page Component
 const PatientInfoPage = () => {
   const { patientId } = useParams();
@@ -309,7 +341,52 @@ const PatientInfoPage = () => {
               assistant: null,
               frequency: ''
             }
-          }
+          },
+          // Datos de ejercicios de ejemplo
+          exercises: [
+            {
+              id: 1,
+              name: 'Forward Lunge in Standing',
+              description: 'Lower body strengthening exercise for hip and knee muscles.',
+              bodyPart: 'Hip',
+              category: 'Strengthening',
+              subCategory: 'Functional',
+              discipline: 'PT',
+              imageUrl: '/exercise-images/forward-lunge.jpg',
+              sets: 3,
+              reps: 10,
+              sessions: 1,
+              isHEP: true
+            },
+            {
+              id: 2,
+              name: 'Arm Chair Push',
+              description: 'Upper body strengthening exercise using a chair for support.',
+              bodyPart: 'Shoulder',
+              category: 'Strengthening',
+              subCategory: 'Functional',
+              discipline: 'PT',
+              imageUrl: '/exercise-images/arm-chair-push.jpg',
+              sets: 3,
+              reps: 15,
+              sessions: 1,
+              isHEP: true
+            },
+            {
+              id: 3,
+              name: 'Deep Squat',
+              description: 'Lower body strengthening exercise for multiple muscle groups.',
+              bodyPart: 'Knee',
+              category: 'Strengthening',
+              subCategory: 'Functional',
+              discipline: 'PT',
+              imageUrl: '/exercise-images/deep-squat.jpg',
+              sets: 3,
+              reps: 10,
+              sessions: 1,
+              isHEP: true
+            }
+          ]
         },
         {
           id: 2,
@@ -322,7 +399,7 @@ const PatientInfoPage = () => {
           state: "CA",
           zip: "90025",
           phone: "(310) 808-5631",
-          certPeriod: "04-19-2023 to 04-19-2025",
+          certPeriod: "03-05-2025 to 05-04-2025", // Adjusted to match the data in the UI
           status: "Active",
           dob: "05/12/1965",
           gender: "Male",
@@ -388,7 +465,38 @@ const PatientInfoPage = () => {
               assistant: null,
               frequency: ''
             }
-          }
+          },
+          // Datos de ejercicios de ejemplo (añadir algunos para OT)
+          exercises: [
+            {
+              id: 4,
+              name: 'Shoulder Flexion',
+              description: 'Range of motion exercise for the shoulder joint.',
+              bodyPart: 'Shoulder',
+              category: 'Range of Motion',
+              subCategory: 'Active',
+              discipline: 'OT',
+              imageUrl: '/exercise-images/shoulder-flexion.jpg',
+              sets: 2,
+              reps: 15,
+              sessions: 2,
+              isHEP: true
+            },
+            {
+              id: 5,
+              name: 'Wrist Extension',
+              description: 'Stretching exercise for the wrist extensors.',
+              bodyPart: 'Wrist',
+              category: 'Stretching',
+              subCategory: 'Static',
+              discipline: 'OT',
+              imageUrl: '/exercise-images/wrist-extension.jpg',
+              sets: 3,
+              reps: 10,
+              sessions: 2,
+              isHEP: true
+            }
+          ]
         }
       ];
       
@@ -521,22 +629,10 @@ const PatientInfoPage = () => {
               <DisciplinesSection patient={patient} />
             )}
             {activeTab === 'schedule' && (
-              <div className="schedule-placeholder">
-                <div className="placeholder-content">
-                  <i className="fas fa-calendar-alt"></i>
-                  <p>Schedule Section</p>
-                  <span>This section will be developed in the next phase</span>
-                </div>
-              </div>
+              <ScheduleSection patient={patient} />
             )}
             {activeTab === 'exercises' && (
-              <div className="exercises-placeholder">
-                <div className="placeholder-content">
-                  <i className="fas fa-dumbbell"></i>
-                  <p>Exercises Section</p>
-                  <span>This section will be developed in the next phase</span>
-                </div>
-              </div>
+              <ExercisesSection patient={patient} />
             )}
             {activeTab === 'documents' && (
               <div className="documents-placeholder">
