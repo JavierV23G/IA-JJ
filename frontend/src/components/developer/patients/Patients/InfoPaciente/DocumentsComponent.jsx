@@ -1,163 +1,125 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faFile, faFileAlt, faFilePdf, faFileImage, faFileArchive, 
+  faFileExcel, faFilePowerpoint, faFileWord, faFileCode,
+  faDownload, faTrashAlt, faEye, faPlus, faUpload, faSearch,
+  faTimes, faCheck, faInfoCircle, faSpinner
+} from '@fortawesome/free-solid-svg-icons';
 import '../../../../../styles/developer/Patients/InfoPaciente/DocumentsComponent.scss';
 
 const DocumentsComponent = ({ patient, onUpdateDocuments }) => {
   const [documents, setDocuments] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [showConfirmDelete, setShowConfirmDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
-  const [viewDocument, setViewDocument] = useState(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  const fileInputRef = useRef(null);
+  
+  // Document categories
+  const categories = [
+    'All',
+    'Medical Reports',
+    'Assessments',
+    'Progress Notes',
+    'Insurance',
+    'Prescriptions',
+    'Discharge Forms',
+    'Other'
+  ];
 
-  // Mock documents data - In a real app, this would come from an API
+  // Fetch documents data when component mounts
   useEffect(() => {
     if (patient?.documents) {
-      setDocuments(patient.documents);
+      setDocuments(patient.documents || []);
     } else {
-      // Mock data for testing
-      setDocuments([
+      // Mock data for demonstration purposes
+      const mockDocuments = [
         {
           id: 1,
-          name: 'Initial Evaluation Report.pdf',
-          type: 'application/pdf',
-          date: '2025-04-10T15:30:00',
-          size: 1240000,
+          name: 'Evaluation Report.pdf',
+          type: 'pdf',
+          size: 2456000,
+          category: 'Medical Reports',
           uploadedBy: 'Dr. Michael Chen',
-          category: 'Evaluation'
+          uploadDate: '2025-02-15T14:30:00',
+          description: 'Initial evaluation report by PT',
+          url: '/documents/eval-report.pdf'
         },
         {
           id: 2,
-          name: 'Prescription for PT services.pdf',
-          type: 'application/pdf',
-          date: '2025-04-05T10:15:00',
-          size: 890000,
-          uploadedBy: 'Dr. Emily Parker',
-          category: 'Prescription'
+          name: 'Insurance Approval.pdf',
+          type: 'pdf',
+          size: 1240000,
+          category: 'Insurance',
+          uploadedBy: 'Admin Staff',
+          uploadDate: '2025-02-10T09:15:00',
+          description: 'Insurance approval for therapy sessions',
+          url: '/documents/insurance-approval.pdf'
         },
         {
           id: 3,
-          name: 'Medical Records - Hospital Discharge.docx',
-          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          date: '2025-03-25T09:45:00',
-          size: 2540000,
-          uploadedBy: 'Intra Care Home Health',
-          category: 'Medical Records'
+          name: 'Progress Notes - Week 1.docx',
+          type: 'docx',
+          size: 350000,
+          category: 'Progress Notes',
+          uploadedBy: 'Dr. Michael Chen',
+          uploadDate: '2025-02-20T16:45:00',
+          description: 'Weekly progress notes after first week of therapy',
+          url: '/documents/progress-notes-w1.docx'
         },
         {
           id: 4,
-          name: 'Insurance Verification.pdf',
-          type: 'application/pdf',
-          date: '2025-03-20T14:20:00',
-          size: 980000,
-          uploadedBy: 'Admin Staff',
-          category: 'Insurance'
+          name: 'Exercise Program.jpg',
+          type: 'jpg',
+          size: 1750000,
+          category: 'Assessments',
+          uploadedBy: 'Maria Gonzalez',
+          uploadDate: '2025-02-25T10:20:00',
+          description: 'Custom exercise program illustration',
+          url: '/documents/exercise-program.jpg'
         }
-      ]);
+      ];
+      
+      setDocuments(mockDocuments);
     }
   }, [patient]);
 
-  const handleFileSelect = (e) => {
-    if (e.target.files.length > 0) {
-      setSelectedFile(e.target.files[0]);
+  const getFileIcon = (fileType) => {
+    switch(fileType.toLowerCase()) {
+      case 'pdf':
+        return <FontAwesomeIcon icon={faFilePdf} className="file-icon pdf" />;
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+        return <FontAwesomeIcon icon={faFileImage} className="file-icon image" />;
+      case 'doc':
+      case 'docx':
+        return <FontAwesomeIcon icon={faFileWord} className="file-icon word" />;
+      case 'xls':
+      case 'xlsx':
+        return <FontAwesomeIcon icon={faFileExcel} className="file-icon excel" />;
+      case 'ppt':
+      case 'pptx':
+        return <FontAwesomeIcon icon={faFilePowerpoint} className="file-icon powerpoint" />;
+      case 'zip':
+      case 'rar':
+        return <FontAwesomeIcon icon={faFileArchive} className="file-icon archive" />;
+      case 'js':
+      case 'html':
+      case 'css':
+      case 'json':
+        return <FontAwesomeIcon icon={faFileCode} className="file-icon code" />;
+      default:
+        return <FontAwesomeIcon icon={faFileAlt} className="file-icon default" />;
     }
-  };
-
-  const handleUpload = () => {
-    if (!selectedFile) return;
-
-    setIsUploading(true);
-    setUploadProgress(0);
-
-    // Simulate upload progress
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return prev + 5;
-      });
-    }, 100);
-
-    // Simulate upload completion
-    setTimeout(() => {
-      clearInterval(interval);
-      setUploadProgress(100);
-      
-      // Create new document object
-      const newDocument = {
-        id: documents.length + 1,
-        name: selectedFile.name,
-        type: selectedFile.type,
-        date: new Date().toISOString(),
-        size: selectedFile.size,
-        uploadedBy: 'Current User', // In real app, get from auth context
-        category: 'Uncategorized'
-      };
-
-      // Add to documents list
-      const updatedDocuments = [...documents, newDocument];
-      setDocuments(updatedDocuments);
-      
-      // Call parent handler if provided
-      if (onUpdateDocuments) {
-        onUpdateDocuments(updatedDocuments);
-      }
-      
-      // Reset upload state
-      setTimeout(() => {
-        setIsUploading(false);
-        setSelectedFile(null);
-        setUploadProgress(0);
-      }, 500);
-    }, 2500);
-  };
-
-  const handleDeleteDocument = (id) => {
-    // Show confirmation first
-    setShowConfirmDelete(id);
-  };
-
-  const confirmDelete = (id) => {
-    // Filter out the document with the given id
-    const updatedDocuments = documents.filter(doc => doc.id !== id);
-    setDocuments(updatedDocuments);
-    
-    // Call parent handler if provided
-    if (onUpdateDocuments) {
-      onUpdateDocuments(updatedDocuments);
-    }
-    
-    // Reset confirmation
-    setShowConfirmDelete(null);
-  };
-
-  const cancelDelete = () => {
-    setShowConfirmDelete(null);
-  };
-
-  const handleViewDocument = (document) => {
-    setViewDocument(document);
-  };
-
-  const closeDocumentViewer = () => {
-    setViewDocument(null);
-  };
-
-  const downloadDocument = (document) => {
-    // In a real app, this would download the file
-    console.log(`Downloading document: ${document.name}`);
-    
-    // Simulate download by creating a temporary link
-    const link = document.createElement('a');
-    link.href = '#'; // This would be the download URL in a real app
-    link.setAttribute('download', document.name);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
   };
 
   const formatFileSize = (bytes) => {
@@ -169,278 +131,405 @@ const DocumentsComponent = ({ patient, onUpdateDocuments }) => {
   };
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    const options = { 
       year: 'numeric', 
       month: 'short', 
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
+    };
+    return new Date(dateString).toLocaleString('en-US', options);
+  };
+
+  const handleFileUploadClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleFileSelected = (e) => {
+    const files = e.target.files;
+    if (files.length === 0) return;
+    
+    // Start upload simulation
+    handleFileUpload(files[0]);
+  };
+
+  const handleFileUpload = (file) => {
+    setIsUploading(true);
+    setUploadProgress(0);
+    
+    // Simulate file upload progress
+    const interval = setInterval(() => {
+      setUploadProgress(prevProgress => {
+        if (prevProgress >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            // Add new document to list after upload completes
+            const newDocument = {
+              id: documents.length + 1,
+              name: file.name,
+              type: file.name.split('.').pop(),
+              size: file.size,
+              category: 'Other', // Default category that can be changed later
+              uploadedBy: 'Current User', // In a real app, get from auth context
+              uploadDate: new Date().toISOString(),
+              description: '',
+              url: URL.createObjectURL(file) // This is temporary and would be a server URL in production
+            };
+            
+            setDocuments(prevDocs => [...prevDocs, newDocument]);
+            setIsUploading(false);
+            
+            // Notify parent component
+            if (onUpdateDocuments) {
+              onUpdateDocuments([...documents, newDocument]);
+            }
+          }, 500);
+          return 100;
+        }
+        return prevProgress + 5;
+      });
+    }, 100);
+  };
+
+  const handleViewDocument = (document) => {
+    setSelectedDocument(document);
+    setIsViewModalOpen(true);
+  };
+
+  const handleDeleteClick = (document) => {
+    setSelectedDocument(document);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    const updatedDocuments = documents.filter(doc => doc.id !== selectedDocument.id);
+    setDocuments(updatedDocuments);
+    setIsDeleteModalOpen(false);
+    
+    // Notify parent component
+    if (onUpdateDocuments) {
+      onUpdateDocuments(updatedDocuments);
+    }
+  };
+
+  const handleDownload = (document) => {
+    // In a real app, this would be a proper download link
+    const link = document.url;
+    window.open(link, '_blank');
+  };
+
+  const filterDocuments = () => {
+    let filteredDocs = [...documents];
+    
+    // Apply category filter
+    if (categoryFilter !== 'All') {
+      filteredDocs = filteredDocs.filter(doc => doc.category === categoryFilter);
+    }
+    
+    // Apply search term filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filteredDocs = filteredDocs.filter(doc => 
+        doc.name.toLowerCase().includes(term) || 
+        doc.description.toLowerCase().includes(term) ||
+        doc.uploadedBy.toLowerCase().includes(term)
+      );
+    }
+    
+    // Apply sorting
+    filteredDocs.sort((a, b) => {
+      let comparison = 0;
+      
+      switch(sortBy) {
+        case 'name':
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case 'date':
+          comparison = new Date(a.uploadDate) - new Date(b.uploadDate);
+          break;
+        case 'size':
+          comparison = a.size - b.size;
+          break;
+        case 'type':
+          comparison = a.type.localeCompare(b.type);
+          break;
+        default:
+          comparison = 0;
+      }
+      
+      return sortOrder === 'asc' ? comparison : -comparison;
     });
+    
+    return filteredDocs;
   };
 
-  const getFileIcon = (fileType) => {
-    if (fileType.includes('pdf')) {
-      return <i className="fas fa-file-pdf"></i>;
-    } else if (fileType.includes('word') || fileType.includes('doc')) {
-      return <i className="fas fa-file-word"></i>;
-    } else if (fileType.includes('sheet') || fileType.includes('excel') || fileType.includes('xls')) {
-      return <i className="fas fa-file-excel"></i>;
-    } else if (fileType.includes('image')) {
-      return <i className="fas fa-file-image"></i>;
-    } else {
-      return <i className="fas fa-file-alt"></i>;
-    }
+  const toggleSortOrder = () => {
+    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
   };
 
-  // Filter and sort documents
-  const filteredDocuments = documents.filter(doc => 
-    doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    doc.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    doc.uploadedBy.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const sortedDocuments = [...filteredDocuments].sort((a, b) => {
-    let comparison = 0;
-    if (sortBy === 'name') {
-      comparison = a.name.localeCompare(b.name);
-    } else if (sortBy === 'date') {
-      comparison = new Date(a.date) - new Date(b.date);
-    } else if (sortBy === 'size') {
-      comparison = a.size - b.size;
-    } else if (sortBy === 'category') {
-      comparison = a.category.localeCompare(b.category);
-    }
-    return sortOrder === 'asc' ? comparison : -comparison;
-  });
+  const filteredDocuments = filterDocuments();
 
   return (
     <div className="documents-component">
       <div className="documents-header">
-        <div className="header-title">
-          <i className="fas fa-file-alt"></i>
-          <h3>Patient Documents</h3>
+        <div className="header-icon">
+          <FontAwesomeIcon icon={faFile} />
+        </div>
+        <h2 className="header-title">Patient Documents</h2>
+        <div className="header-actions">
+          <button className="action-button upload-btn" onClick={handleFileUploadClick}>
+            <FontAwesomeIcon icon={faUpload} />
+            <span>Upload Document</span>
+          </button>
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            style={{ display: 'none' }} 
+            onChange={handleFileSelected}
+          />
+        </div>
+      </div>
+      
+      <div className="documents-toolbar">
+        <div className="search-container">
+          <FontAwesomeIcon icon={faSearch} className="search-icon" />
+          <input 
+            type="text" 
+            placeholder="Search documents..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+          />
+          {searchTerm && (
+            <button className="clear-search" onClick={() => setSearchTerm('')}>
+              <FontAwesomeIcon icon={faTimes} />
+            </button>
+          )}
         </div>
         
-        <div className="header-actions">
-          <div className="search-documents">
-            <i className="fas fa-search"></i>
-            <input 
-              type="text" 
-              placeholder="Search documents..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+        <div className="filter-container">
+          <select 
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="category-filter"
+          >
+            {categories.map(category => (
+              <option key={category} value={category}>{category}</option>
+            ))}
+          </select>
           
-          <div className="sort-options">
+          <div className="sort-container">
+            <label>Sort by:</label>
             <select 
-              value={sortBy} 
+              value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="sort-by"
+              className="sort-select"
             >
               <option value="date">Date</option>
               <option value="name">Name</option>
               <option value="size">Size</option>
-              <option value="category">Category</option>
+              <option value="type">Type</option>
             </select>
-            
-            <button 
-              className="sort-order" 
-              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-              title={sortOrder === 'asc' ? 'Sort Descending' : 'Sort Ascending'}
-            >
-              <i className={`fas fa-sort-${sortOrder === 'asc' ? 'up' : 'down'}`}></i>
+            <button className="sort-order-btn" onClick={toggleSortOrder}>
+              {sortOrder === 'asc' ? '↑' : '↓'}
             </button>
           </div>
-          
-          <label className="upload-button">
-            <input 
-              type="file" 
-              onChange={handleFileSelect} 
-              style={{ display: 'none' }}
-            />
-            <i className="fas fa-plus"></i>
-            <span>Upload Document</span>
-          </label>
         </div>
       </div>
       
-      {/* Upload progress */}
       {isUploading && (
         <div className="upload-progress-container">
           <div className="upload-info">
-            <div className="file-preview">
-              {getFileIcon({ type: selectedFile.type })}
-              <span className="file-name">{selectedFile.name}</span>
-            </div>
-            <div className="progress-percentage">{uploadProgress}%</div>
-          </div>
-          <div className="progress-bar">
-            <div 
-              className="progress-fill" 
-              style={{ width: `${uploadProgress}%` }}
-            >
-              <div className="progress-glow"></div>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Selected file ready for upload */}
-      {selectedFile && !isUploading && (
-        <div className="selected-file-container">
-          <div className="file-preview">
-            {getFileIcon({ type: selectedFile.type })}
-            <span className="file-name">{selectedFile.name}</span>
-            <span className="file-size">({formatFileSize(selectedFile.size)})</span>
-          </div>
-          <div className="file-actions">
-            <button className="cancel-button" onClick={() => setSelectedFile(null)}>
-              <i className="fas fa-times"></i>
-              <span>Cancel</span>
-            </button>
-            <button className="upload-now-button" onClick={handleUpload}>
-              <i className="fas fa-cloud-upload-alt"></i>
-              <span>Upload Now</span>
-            </button>
-          </div>
-        </div>
-      )}
-      
-      {/* Documents list */}
-      <div className="documents-list">
-        {sortedDocuments.length > 0 ? (
-          <>
-            <div className="documents-table-header">
-              <div className="document-name-col">Document</div>
-              <div className="document-category-col">Category</div>
-              <div className="document-date-col">Date Uploaded</div>
-              <div className="document-size-col">Size</div>
-              <div className="document-uploaded-by-col">Uploaded By</div>
-              <div className="document-actions-col">Actions</div>
-            </div>
-            
-            {sortedDocuments.map(document => (
-              <div key={document.id} className="document-item">
-                <div className="document-name-col">
-                  <div className="document-icon">
-                    {getFileIcon(document.type)}
-                  </div>
-                  <div className="document-name-text">
-                    {document.name}
-                  </div>
-                </div>
-                <div className="document-category-col">
-                  <span className={`category-badge ${document.category.toLowerCase().replace(/\s+/g, '-')}`}>
-                    {document.category}
-                  </span>
-                </div>
-                <div className="document-date-col">
-                  {formatDate(document.date)}
-                </div>
-                <div className="document-size-col">
-                  {formatFileSize(document.size)}
-                </div>
-                <div className="document-uploaded-by-col">
-                  {document.uploadedBy}
-                </div>
-                <div className="document-actions-col">
-                  <button 
-                    className="document-action view-action" 
-                    onClick={() => handleViewDocument(document)}
-                    title="View Document"
-                  >
-                    <i className="fas fa-eye"></i>
-                  </button>
-                  <button 
-                    className="document-action download-action" 
-                    onClick={() => downloadDocument(document)}
-                    title="Download Document"
-                  >
-                    <i className="fas fa-download"></i>
-                  </button>
-                  <button 
-                    className="document-action delete-action" 
-                    onClick={() => handleDeleteDocument(document.id)}
-                    title="Delete Document"
-                  >
-                    <i className="fas fa-trash-alt"></i>
-                  </button>
-                  
-                  {showConfirmDelete === document.id && (
-                    <div className="delete-confirmation">
-                      <p>Delete this document?</p>
-                      <div className="confirmation-actions">
-                        <button onClick={() => confirmDelete(document.id)} className="confirm-yes">
-                          Yes
-                        </button>
-                        <button onClick={cancelDelete} className="confirm-no">
-                          No
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
+            <FontAwesomeIcon icon={faUpload} className="upload-icon pulse" />
+            <div className="upload-details">
+              <div className="upload-title">Uploading document...</div>
+              <div className="progress-bar">
+                <div 
+                  className="progress-fill" 
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
               </div>
-            ))}
-          </>
+              <div className="progress-text">{uploadProgress}% Complete</div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <div className="documents-list">
+        {filteredDocuments.length > 0 ? (
+          filteredDocuments.map(document => (
+            <div className="document-card" key={document.id}>
+              <div className="document-icon">
+                {getFileIcon(document.type)}
+              </div>
+              <div className="document-details">
+                <div className="document-name">{document.name}</div>
+                <div className="document-meta">
+                  <span className="document-category">{document.category}</span>
+                  <span className="document-size">{formatFileSize(document.size)}</span>
+                  <span className="document-date">{formatDate(document.uploadDate)}</span>
+                </div>
+                <div className="document-uploader">
+                  <span>Uploaded by: </span>
+                  <strong>{document.uploadedBy}</strong>
+                </div>
+                {document.description && (
+                  <div className="document-description">{document.description}</div>
+                )}
+              </div>
+              <div className="document-actions">
+                <button 
+                  className="action-btn view-btn" 
+                  onClick={() => handleViewDocument(document)}
+                  title="View Document"
+                >
+                  <FontAwesomeIcon icon={faEye} />
+                </button>
+                <button 
+                  className="action-btn download-btn" 
+                  onClick={() => handleDownload(document)}
+                  title="Download Document"
+                >
+                  <FontAwesomeIcon icon={faDownload} />
+                </button>
+                <button 
+                  className="action-btn delete-btn" 
+                  onClick={() => handleDeleteClick(document)}
+                  title="Delete Document"
+                >
+                  <FontAwesomeIcon icon={faTrashAlt} />
+                </button>
+              </div>
+            </div>
+          ))
         ) : (
           <div className="no-documents">
-            <div className="no-docs-icon">
-              <i className="fas fa-file-upload"></i>
-            </div>
-            <p>No documents available</p>
-            <label className="add-document-btn">
-              <input 
-                type="file" 
-                onChange={handleFileSelect} 
-                style={{ display: 'none' }}
-              />
-              <i className="fas fa-plus"></i>
-              <span>Upload First Document</span>
-            </label>
+            <FontAwesomeIcon icon={faFile} className="no-documents-icon" />
+            <p className="no-documents-text">No documents found</p>
+            <button className="upload-document-btn" onClick={handleFileUploadClick}>
+              <FontAwesomeIcon icon={faPlus} />
+              <span>Upload New Document</span>
+            </button>
           </div>
         )}
       </div>
       
-      {/* Document viewer */}
-      {viewDocument && (
-        <div className="document-viewer-overlay">
-          <div className="document-viewer">
-            <div className="viewer-header">
-              <div className="viewer-title">
-                <div className="document-icon">
-                  {getFileIcon(viewDocument.type)}
-                </div>
-                <h3>{viewDocument.name}</h3>
+      {/* View Document Modal */}
+      {isViewModalOpen && selectedDocument && (
+        <div className="modal-overlay">
+          <div className="document-view-modal">
+            <div className="modal-header">
+              <h3>{selectedDocument.name}</h3>
+              <button 
+                className="close-modal-btn"
+                onClick={() => setIsViewModalOpen(false)}
+              >
+                <FontAwesomeIcon icon={faTimes} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="document-preview">
+                {selectedDocument.type === 'pdf' ? (
+                  <iframe 
+                    src={selectedDocument.url} 
+                    title={selectedDocument.name} 
+                    width="100%" 
+                    height="500px"
+                  />
+                ) : selectedDocument.type.match(/jpe?g|png|gif/i) ? (
+                  <img 
+                    src={selectedDocument.url} 
+                    alt={selectedDocument.name} 
+                    className="preview-image" 
+                  />
+                ) : (
+                  <div className="no-preview">
+                    <FontAwesomeIcon icon={faFile} className="no-preview-icon" />
+                    <p>Preview not available for this file type</p>
+                    <button 
+                      className="download-btn"
+                      onClick={() => handleDownload(selectedDocument)}
+                    >
+                      <FontAwesomeIcon icon={faDownload} />
+                      <span>Download to View</span>
+                    </button>
+                  </div>
+                )}
               </div>
-              <div className="viewer-actions">
-                <button 
-                  className="download-action" 
-                  onClick={() => downloadDocument(viewDocument)}
-                  title="Download Document"
-                >
-                  <i className="fas fa-download"></i>
-                </button>
-                <button 
-                  className="close-action" 
-                  onClick={closeDocumentViewer}
-                  title="Close Viewer"
-                >
-                  <i className="fas fa-times"></i>
-                </button>
+              <div className="document-info">
+                <div className="info-row">
+                  <div className="info-label">File Type:</div>
+                  <div className="info-value">{selectedDocument.type.toUpperCase()}</div>
+                </div>
+                <div className="info-row">
+                  <div className="info-label">Size:</div>
+                  <div className="info-value">{formatFileSize(selectedDocument.size)}</div>
+                </div>
+                <div className="info-row">
+                  <div className="info-label">Category:</div>
+                  <div className="info-value">{selectedDocument.category}</div>
+                </div>
+                <div className="info-row">
+                  <div className="info-label">Uploaded By:</div>
+                  <div className="info-value">{selectedDocument.uploadedBy}</div>
+                </div>
+                <div className="info-row">
+                  <div className="info-label">Upload Date:</div>
+                  <div className="info-value">{formatDate(selectedDocument.uploadDate)}</div>
+                </div>
+                {selectedDocument.description && (
+                  <div className="info-row">
+                    <div className="info-label">Description:</div>
+                    <div className="info-value description">{selectedDocument.description}</div>
+                  </div>
+                )}
               </div>
             </div>
-            <div className="viewer-content">
-              {/* In a real app, this would render the document based on type */}
-              <div className="document-preview">
-                <div className="preview-placeholder">
-                  <i className="fas fa-file-alt"></i>
-                  <p>Document Preview</p>
-                  <span>Preview would be rendered here based on document type</span>
-                </div>
-              </div>
+            <div className="modal-footer">
+              <button 
+                className="modal-btn cancel-btn"
+                onClick={() => setIsViewModalOpen(false)}
+              >
+                Close
+              </button>
+              <button 
+                className="modal-btn download-btn"
+                onClick={() => handleDownload(selectedDocument)}
+              >
+                <FontAwesomeIcon icon={faDownload} />
+                <span>Download</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && selectedDocument && (
+        <div className="modal-overlay">
+          <div className="delete-confirmation-modal">
+            <div className="modal-header">
+              <FontAwesomeIcon icon={faTrashAlt} className="delete-icon" />
+              <h3>Delete Document</h3>
+            </div>
+            <div className="modal-body">
+              <p>Are you sure you want to delete <strong>{selectedDocument.name}</strong>?</p>
+              <p className="warning-text">This action cannot be undone.</p>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="modal-btn cancel-btn"
+                onClick={() => setIsDeleteModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="modal-btn delete-btn"
+                onClick={handleConfirmDelete}
+              >
+                <FontAwesomeIcon icon={faTrashAlt} />
+                <span>Delete</span>
+              </button>
             </div>
           </div>
         </div>
