@@ -13,28 +13,23 @@ app = FastAPI()
 @app.on_event("startup")
 async def startup():
     try:
-        # Ensure we're in public schema
         with engine.connect() as conn:
             conn.execute(text("SET search_path TO public;"))
         
-        # Verify and create tables if they do not exist
         with engine.connect() as conn:
             inspector = inspect(engine)
             existing_tables = inspector.get_table_names()
-            print(f"Existing tables: {existing_tables}")  # Debug print
+            print(f"Existing tables: {existing_tables}") 
             
-            # Define expected tables
             expected_tables = {'agencias', 'pacientes', 'terapistas', 'paciente_terapeuta', 
-                               'certification_periods', 'visitas'}  # Ensure this matches models.py
+                               'certification_periods', 'visitas'} 
             
-            # Create tables that do not exist
             tables_to_create = expected_tables - set(existing_tables)
             if tables_to_create:
-                print(f"Creating tables: {tables_to_create}")  # Debug print
-                # Use Base.metadata.create_all to ensure all dependencies are handled
+                print(f"Creating tables: {tables_to_create}")
                 Base.metadata.create_all(bind=engine)
             else:
-                print("All tables already exist.")  # Debug print
+                print("All tables already exist.") 
                 
     except Exception as e:
         print(f"Error during startup: {e}")
