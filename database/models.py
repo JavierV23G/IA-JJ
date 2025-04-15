@@ -40,9 +40,8 @@ class Pacientes(Base):
     contact_info = Column(String(255))
     discipline = Column(String(255))
     payor_type = Column(String(255))
-    cert_period = Column(String(255))
+    cert_period = Column(String(255), nullable=True)
     agency = Column(Integer, ForeignKey('agencias.id_agency'))
-    physician = Column(String(255))
     activo = Column(Boolean)
     
     agencia = relationship("Agencias", back_populates="pacientes")
@@ -77,8 +76,13 @@ class Visitas(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     paciente_id = Column(Integer, ForeignKey('pacientes.id_paciente'))
+    terapeuta_id = Column(Integer, ForeignKey('terapistas.user_id'))
+    cert_period_id = Column(Integer, ForeignKey('certification_periods.id'))
+    tipo_visita = Column(String(50))
     date = Column(Date)
     status = Column(String(50))
     notes = Column(String)
     
     paciente = relationship("Pacientes", back_populates="visitas")
+    terapeuta = relationship("Terapistas")
+    cert_period = relationship("CertificationPeriods")

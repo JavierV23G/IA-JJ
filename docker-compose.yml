@@ -11,6 +11,7 @@ services:
       - /app/node_modules
     depends_on:
       - backend-service
+    
 
   backend-service:
     container_name: backend-container
@@ -27,8 +28,10 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
 
   db:
     container_name: database-container
@@ -52,7 +55,3 @@ services:
 volumes:
   postgres_data:
     name: IA_JJ_postgres-data
-
-networks:
-  default:
-    name: IA_JJ_default

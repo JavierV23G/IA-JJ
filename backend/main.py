@@ -6,6 +6,7 @@ sys.path.append("/app")
 
 from database.connection import engine, Base
 from database.models import Agencias, Pacientes, Terapistas, PacienteTerapeuta, CertificationPeriods, Visitas
+from routes import create_router, search_router, update_router  # Import routers
 
 app = FastAPI()
 
@@ -37,6 +38,10 @@ async def startup():
                 
     except Exception as e:
         print(f"Error during startup: {e}")
+
+app.include_router(create_router, prefix="/api")
+app.include_router(search_router, prefix="/api")
+app.include_router(update_router, prefix="/api")
 
 @app.get("/")
 async def root():
