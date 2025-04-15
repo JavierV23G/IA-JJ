@@ -3,7 +3,7 @@ import StaffProfileModal from './StaffProfileModal';
 import '../../../../styles/developer/Patients/Staffing/StaffList.scss';
 import '../../../../styles/developer/Patients/Staffing/LoadingAnimation.scss';
 
-const StaffListComponent = ({ onBackToOptions }) => {
+const DevStaffListComponent = ({ onBackToOptions }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState('Cargando personal...');
   const [staffList, setStaffList] = useState([]);
@@ -493,6 +493,7 @@ const StaffListComponent = ({ onBackToOptions }) => {
               <option value="cota">Occupational Therapy Assistant</option>
               <option value="st">Speech Therapist</option>
               <option value="sta">Speech Therapy Assistant</option>
+              <option value="agency">Agency</option>
               <option value="administrator">Administrator</option>
             </select>
           </div>
@@ -652,4 +653,4 @@ const StaffListComponent = ({ onBackToOptions }) => {
   );
 };
 
-export default StaffListComponent;
+export default DevStaffListComponent;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../../../styles/developer/support/SupportStats.scss';
 
-const SupportStats = ({ stats }) => {
+const DevSupportStats = ({ stats }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [animatedStats, setAnimatedStats] = useState({
     ticketsResolved: 0,
@@ -466,4 +466,4 @@ const SupportStats = ({ stats }) => {
   );
 };
 
-export default SupportStats;
+export default DevSupportStats;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../../../styles/developer/support/SupportKnowledgeBase.scss';
 
-const SupportKnowledgeBase = ({ preview = false }) => {
+const DevSupportKnowledgeBase = ({ preview = false }) => {
   const [articles, setArticles] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -532,4 +532,4 @@ const SupportKnowledgeBase = ({ preview = false }) => {
   );
 };
 
-export default SupportKnowledgeBase;
+export default DevSupportKnowledgeBase;

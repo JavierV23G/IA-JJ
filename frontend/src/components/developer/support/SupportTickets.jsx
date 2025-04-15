@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../../../styles/developer/support/SupportTickets.scss';
 
-const SupportTickets = ({ preview = false }) => {
+const DevSupportTickets = ({ preview = false }) => {
   // States
   const [tickets, setTickets] = useState([]);
   const [currentFilter, setCurrentFilter] = useState('all');
@@ -1358,4 +1358,4 @@ const SupportTickets = ({ preview = false }) => {
   );
 };
 
-export default SupportTickets;
+export default DevSupportTickets;

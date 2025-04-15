@@ -1,10 +1,16 @@
+// components/login/Login.jsx (dentro de Login.jsx o el componente que maneje el login)
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthLoadingModal from './AuthLoadingModal';
+import AccountLockoutModal from './AccountLockoutModal'; // Nuevo componente
 import logoImg from '../../assets/LogoMHC.jpeg';
+import { useAuth } from './AuthContext';
+import AccountLockoutService from './AccountLockoutService'; // Nuevo servicio
 
 const Login = ({ onForgotPassword }) => {
   const navigate = useNavigate();
+  const { login } = useAuth(); // Usar el contexto de autenticación
+  
   const [formData, setFormData] = useState({
     username: '',
     password: ''
@@ -22,11 +28,94 @@ const Login = ({ onForgotPassword }) => {
     status: 'loading',
     message: ''
   });
+  
+  // Estado para el modal de bloqueo de cuenta
+  const [lockoutModal, setLockoutModal] = useState({
+    isOpen: false,
+    username: '',
+    remainingTime: 0
+  });
 
-  // Lista de credenciales válidas (después se moverían al backend)
+  // Lista de credenciales válidas con datos completos (solo en el código, no en la UI)
   const validCredentials = [
-    { username: "JLuis09", password: "Kariokito12" },
-    { username: "Javi1", password: "JavierVargas12" }
+    { 
+      username: "JLuis09", 
+      password: "Kariokito12",
+      fullname: "Luis Nava",
+      email: "jluis@example.com",
+      role: "Developer",
+      contact_number: "555-123-4567",
+      documents: "ID-12345",
+      zip_code: "90210",
+      birth_date: "1990-05-15"
+    },
+    { 
+      username: "Javi1", 
+      password: "JavierVargas12",
+      fullname: "Javier Vargas",
+      email: "javier@example.com",
+      role: "Administrator",
+      contact_number: "555-987-6543",
+      documents: "ID-54321",
+      zip_code: "90211",
+      birth_date: "1985-10-20"
+    },
+    { 
+      username: "AlexM1", 
+      password: "AlexMar09",
+      fullname: "Alex Martinez",
+      email: "Alex@example.com",
+      role: "PT",
+      contact_number: "555-987-6543",
+      documents: "ID-54321",
+      zip_code: "90211",
+      birth_date: "1985-10-20"
+    },
+    {
+      username: "Justin1", 
+      password: "Justin12",
+      fullname: "Justin Shimane",
+      email: "Justin@example.com",
+      role: "OT",
+      contact_number: "555-987-6543",
+      documents: "ID-54321",
+      zip_code: "90211",
+      birth_date: "1985-10-20"
+    },
+    {
+      username: "Arya1", 
+      password: "Arya12",
+      fullname: "Arya Pedoiem",
+      email: "arya@example.com",
+      role: "ST",
+      contact_number: "555-987-6543",
+      documents: "ID-54321",
+      zip_code: "90211",
+      birth_date: "1985-10-20"
+    },
+    {
+      username: "Cohen1", 
+      password: "Cohen12*",
+      fullname: "Cohen N",
+      email: "Cohen@example.com",
+      role: "Administrator",
+      contact_number: "555-987-6543",
+      documents: "ID-54321",
+      zip_code: "90211",
+      birth_date: "1985-10-20"
+    
+    },
+    {
+      username: "Carlo1", 
+      password: "Carlo12*",
+      fullname: "Carlo Gianzon",
+      email: "Carlo@example.com",
+      role: "PTA",
+      contact_number: "555-987-6543",
+      documents: "ID-54321",
+      zip_code: "90211",
+      birth_date: "1985-10-20"
+    }
   ];
 
   // Comprobar el localStorage al cargar
@@ -38,6 +127,18 @@ const Login = ({ onForgotPassword }) => {
         username: savedUsername
       }));
       setRememberMe(true);
+    }
+    
+    // Verificar si hay un bloqueo activo para el usuario guardado
+    if (savedUsername) {
+      const lockStatus = AccountLockoutService.checkAccountLocked(savedUsername);
+      if (lockStatus.isLocked) {
+        setLockoutModal({
+          isOpen: true,
+          username: savedUsername,
+          remainingTime: lockStatus.remainingTime
+        });
+      }
     }
   }, []);
 
@@ -54,6 +155,18 @@ const Login = ({ onForgotPassword }) => {
         ...errors,
         [name]: false
       });
+    }
+    
+    // Si el usuario cambia el nombre de usuario, verificar bloqueos
+    if (name === 'username' && value) {
+      const lockStatus = AccountLockoutService.checkAccountLocked(value);
+      if (lockStatus.isLocked) {
+        setLockoutModal({
+          isOpen: true,
+          username: value,
+          remainingTime: lockStatus.remainingTime
+        });
+      }
     }
   };
 
@@ -109,6 +222,14 @@ const Login = ({ onForgotPassword }) => {
       isOpen: false
     });
   };
+  
+  // Función para cerrar el modal de bloqueo
+  const closeLockoutModal = () => {
+    setLockoutModal({
+      ...lockoutModal,
+      isOpen: false
+    });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -118,15 +239,34 @@ const Login = ({ onForgotPassword }) => {
       return;
     }
     
-    // Verificar credenciales rápidamente primero
-    const isValid = validCredentials.some(
+    // Verificar si la cuenta está bloqueada
+    const lockStatus = AccountLockoutService.checkAccountLocked(formData.username);
+    if (lockStatus.isLocked) {
+      setLockoutModal({
+        isOpen: true,
+        username: formData.username,
+        remainingTime: lockStatus.remainingTime
+      });
+      return;
+    }
+    
+    // Verificar credenciales
+    const user = validCredentials.find(
       cred => cred.username === formData.username && cred.password === formData.password
     );
     
-    // Si las credenciales no son válidas, mostrar error inmediatamente sin abrir el modal
-    if (!isValid) {
-      showError('username', "Invalid username or password");
-      showError('password', "Invalid username or password");
+    // Si las credenciales no son válidas, mostrar error
+    if (!user) {
+      // Registrar intento fallido
+      const lockoutStatus = AccountLockoutService.recordFailedAttempt(formData.username);
+      
+      // Mostrar mensaje de error con intentos restantes
+      const errorMessage = lockoutStatus.isLocked 
+        ? "Account locked due to too many failed attempts" 
+        : `Invalid username or password. ${lockoutStatus.attemptsRemaining} attempts remaining before lockout.`;
+      
+      showError('username', errorMessage);
+      showError('password', errorMessage);
       
       // Efecto visual para errores
       document.querySelectorAll(".login__input").forEach(input => {
@@ -136,8 +276,20 @@ const Login = ({ onForgotPassword }) => {
         }, 500);
       });
       
+      // Si la cuenta ha sido bloqueada, mostrar el modal de bloqueo
+      if (lockoutStatus.isLocked) {
+        setLockoutModal({
+          isOpen: true,
+          username: formData.username,
+          remainingTime: lockoutStatus.remainingTime
+        });
+      }
+      
       return;
     }
+    
+    // Credenciales correctas: registrar inicio de sesión exitoso
+    AccountLockoutService.recordSuccessfulLogin(formData.username);
     
     // Manejar "Remember Me"
     if (rememberMe) {
@@ -155,6 +307,27 @@ const Login = ({ onForgotPassword }) => {
     
     // Simulación del proceso de autenticación exitoso
     setTimeout(() => {
+      // Construir un objeto de usuario con todos los datos del usuario
+      const userData = {
+        id: Math.floor(Math.random() * 1000) + 1, // ID simulado
+        username: user.username,
+        fullname: user.fullname,
+        email: user.email,
+        role: user.role,
+        contact_number: user.contact_number,
+        documents: user.documents,
+        zip_code: user.zip_code,
+        birth_date: user.birth_date,
+        last_login: new Date().toISOString()
+      };
+      
+      // Guardar datos en el contexto de autenticación
+      login({
+        success: true,
+        token: "simulated_token_" + Date.now(),
+        user: userData
+      });
+      
       // Actualizar modal a éxito
       setAuthModal({
         isOpen: true,
@@ -166,11 +339,14 @@ const Login = ({ onForgotPassword }) => {
       showSuccess('username');
       showSuccess('password');
       
+      // Extraer el rol base y dirigir al usuario a su interfaz específica
+      const baseRole = user.role.split(' - ')[0].toLowerCase();
+      
       // Redirigir después de mostrar el mensaje de éxito
       setTimeout(() => {
-        navigate('/homePage');
+        navigate(`/${baseRole}/homePage`);
       }, 2000);
-    }, 4500);
+    }, 2500);
   };
 
   return (
@@ -259,6 +435,14 @@ const Login = ({ onForgotPassword }) => {
         status={authModal.status}
         message={authModal.message}
         onClose={closeAuthModal}
+      />
+      
+      {/* Modal de bloqueo de cuenta */}
+      <AccountLockoutModal
+        isOpen={lockoutModal.isOpen}
+        username={lockoutModal.username}
+        remainingTime={lockoutModal.remainingTime}
+        onClose={closeLockoutModal}
       />
     </>
   );

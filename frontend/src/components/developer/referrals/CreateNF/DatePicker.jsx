@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import '../../../../styles/developer/Referrals/CreateNF/DatePicker.scss';
 
-const CustomDatePicker = ({ 
+const DevCustomDatePicker = ({ 
   selectedDate, 
   onChange, 
   label, 
@@ -347,4 +347,4 @@ const CustomDatePicker = ({
   );
 };
 
-export default CustomDatePicker;
+export default DevCustomDatePicker;

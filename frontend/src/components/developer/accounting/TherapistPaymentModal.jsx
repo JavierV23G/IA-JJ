@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import '../../../styles/developer/accounting/TherapistPaymentModal.scss';
 
-const TherapistPaymentModal = ({ therapist, period, onClose, onPatientClick }) => {
+const DevTherapistPaymentModal = ({ therapist, period, onClose, onPatientClick }) => {
   const [activeTab, setActiveTab] = useState('summary');
   const [modalTransitionClass, setModalTransitionClass] = useState('entering');
   const [showVerifyConfirm, setShowVerifyConfirm] = useState(false);
@@ -1154,4 +1154,4 @@ const TherapistPaymentModal = ({ therapist, period, onClose, onPatientClick }) =
   );
 };
 
-export default TherapistPaymentModal;
+export default DevTherapistPaymentModal;

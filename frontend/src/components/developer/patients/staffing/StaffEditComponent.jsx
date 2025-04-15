@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../../../../styles/developer/Patients/Staffing/StaffEditComponent.scss';
 
-const StaffEditComponent = ({ onBackToOptions }) => {
+const DevStaffEditComponent = ({ onBackToOptions }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState('Conectando con la base de datos...');
   const [staffList, setStaffList] = useState([]);
@@ -297,6 +297,9 @@ const StaffEditComponent = ({ onBackToOptions }) => {
 
   // Roles disponibles
   const roles = [
+    { value: 'agency', label: 'Agency' },
+    { value: 'support', label: 'Support' },
+    { value: 'developer', label: 'Developer' },
     { value: 'administrator', label: 'Administrador' },
     { value: 'pt', label: 'PT - Physical Therapist' },
     { value: 'pta', label: 'PTA - Physical Therapist Assistant' },
@@ -305,6 +308,7 @@ const StaffEditComponent = ({ onBackToOptions }) => {
     { value: 'st', label: 'ST - Speech Therapist' },
     { value: 'sta', label: 'STA - Speech Therapy Assistant' },
   ];
+  
 
   // Lista de documentos requeridos
   const documentsList = [
@@ -1032,4 +1036,4 @@ const StaffEditComponent = ({ onBackToOptions }) => {
   );
 };
 
-export default StaffEditComponent;
+export default DevStaffEditComponent;

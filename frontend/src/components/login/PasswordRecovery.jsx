@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import PremiumEmailAnimation from './PremiumLoadingModal';
 import logoImg from '../../assets/LogoMHC.jpeg';
+import PasswordRecoveryService from './PasswordRecoveryService';
 
 const PasswordRecovery = ({ onBackToLogin }) => {
   const [email, setEmail] = useState('');
@@ -15,18 +16,18 @@ const PasswordRecovery = ({ onBackToLogin }) => {
   });
 
   const validateEmail = (email) => {
-    // Expresión regular simple para validar formato de email
+    // Expresión regular para validar formato de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setEmailError("");
     
     // Validar email
     if (!email || !validateEmail(email)) {
-      setEmailError("Por favor, ingrese un correo electrónico válido");
+      setEmailError("Please enter a valid email address");
       // Efecto visual para errores
       const input = document.getElementById("recovery-email");
       if (input) {
@@ -49,27 +50,54 @@ const PasswordRecovery = ({ onBackToLogin }) => {
     setEmailModal({
       isOpen: true,
       status: 'loading',
-      message: 'Procesando solicitud...'
+      message: 'Processing request...'
     });
     
-    // Simular proceso de envío (esto se conectaría con el backend)
-    setTimeout(() => {
-      // Actualizar modal a éxito
-      setEmailModal({
-        isOpen: true,
-        status: 'success',
-        message: `Instrucciones de recuperación enviadas a ${email}`
-      });
+    try {
+      // Iniciar proceso de recuperación
+      const recoveryResult = await PasswordRecoveryService.initiatePasswordRecovery(email);
       
-      // Reiniciar estado
-      setEmail('');
-      setIsSubmitting(false);
-      
-      // Regresar al login después de mostrar el mensaje de éxito
+      // Simular un tiempo de procesamiento para mostrar la animación
       setTimeout(() => {
-        onBackToLogin();
-      }, 6000); // Dar tiempo para ver la animación de éxito completa
-    }, 8000); // Tiempo suficiente para ver toda la secuencia de animación
+        if (recoveryResult.success) {
+          // Actualizar modal a éxito
+          setEmailModal({
+            isOpen: true,
+            status: 'success',
+            message: recoveryResult.message || `Recovery instructions sent to ${email}`
+          });
+          
+          // Reiniciar estado
+          setEmail('');
+          setIsSubmitting(false);
+          
+          // Regresar al login después de mostrar el mensaje de éxito
+          setTimeout(() => {
+            onBackToLogin();
+          }, 6000); // Dar tiempo para ver la animación de éxito completa
+        } else {
+          // Mostrar error
+          setEmailModal({
+            isOpen: false
+          });
+          
+          setEmailError(recoveryResult.error || 'Failed to process recovery request');
+          setIsSubmitting(false);
+        }
+      }, 8000); // Tiempo suficiente para ver toda la secuencia de animación
+    } catch (error) {
+      console.error('Password recovery error:', error);
+      
+      // Cerrar modal y mostrar error
+      setTimeout(() => {
+        setEmailModal({
+          isOpen: false
+        });
+        
+        setEmailError('An unexpected error occurred. Please try again.');
+        setIsSubmitting(false);
+      }, 2000);
+    }
   };
 
   return (
@@ -110,7 +138,7 @@ const PasswordRecovery = ({ onBackToLogin }) => {
           className="login__button"
           disabled={isSubmitting}
         >
-          SEND RESET LINK
+          {isSubmitting ? 'SENDING...' : 'SEND RESET LINK'}
         </button>
       </form>
       

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import '../../../styles/developer/Welcome/LogoutAnimation.scss';
 
-const LogoutAnimation = () => {
+const DevLogoutAnimation = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -277,4 +277,4 @@ const LogoutAnimation = () => {
   );
 };
 
-export default LogoutAnimation;
+export default DevLogoutAnimation;
