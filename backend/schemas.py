@@ -83,21 +83,20 @@ class VisitaBase(BaseModel):
     paciente_id: int
     terapeuta_id: int
     tipo_visita: str
-    notas: Optional[str] = None
-    estado: Optional[str] = "Scheduled"
-    firma_terapeuta: Optional[bool] = False
-    firma_paciente: Optional[bool] = False
+    notes: Optional[str] = None
+    status: Optional[str] = "Scheduled"
     cert_period_id: Optional[int] = None
 
 class VisitaCreate(BaseModel):
+    paciente_id: int
     terapeuta_id: int
     tipo_visita: str
-    notas: str
+    notes: Optional[str] = None
     cert_period_id: int
 
 class Visita(VisitaBase):
     id: int
-    fecha: datetime
+    date: datetime
 
     class Config:
         from_attributes = True

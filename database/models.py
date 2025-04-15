@@ -76,8 +76,13 @@ class Visitas(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     paciente_id = Column(Integer, ForeignKey('pacientes.id_paciente'))
+    terapeuta_id = Column(Integer, ForeignKey('terapistas.user_id'))
+    cert_period_id = Column(Integer, ForeignKey('certification_periods.id'))
+    tipo_visita = Column(String(50))
     date = Column(Date)
     status = Column(String(50))
     notes = Column(String)
     
     paciente = relationship("Pacientes", back_populates="visitas")
+    terapeuta = relationship("Terapistas")
+    cert_period = relationship("CertificationPeriods")

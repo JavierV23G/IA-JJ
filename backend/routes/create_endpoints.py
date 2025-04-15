@@ -9,6 +9,19 @@ router = APIRouter()
 
 @router.post("/pacientes/")
 def crear_paciente(paciente: PacienteCreate, db: Session = Depends(get_db)):
+    valid_disciplines = ["PT", "OT", "ST"]
+    disciplines = [d.strip() for d in paciente.discipline.split(",")]
+    
+    for discipline in disciplines:
+        if discipline not in valid_disciplines:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Disciplina inválida. Debe ser: {', '.join(valid_disciplines)}"
+            )
+
+    if paciente.gender not in ["Male", "Female", "M", "F"]:
+        raise HTTPException(status_code=400, detail="Género debe ser Male o Female")
+
     agencia = db.query(Agencias).filter(Agencias.id_agency == paciente.agency).first()
     if not agencia:
         raise HTTPException(status_code=404, detail="Agencia no encontrada")
@@ -50,6 +63,10 @@ def crear_agencia(agencia: AgenciaCreate, db: Session = Depends(get_db)):
     if existing_email:
         raise HTTPException(status_code=400, detail="Email ya está registrado")
 
+    existing_phone = db.query(Agencias).filter(Agencias.phone == agencia.phone).first()
+    if existing_phone:
+        raise HTTPException(status_code=400, detail="Número de teléfono ya está registrado")
+
     db_agencia = Agencias(**agencia.dict())
     db.add(db_agencia)
     db.commit()
@@ -58,6 +75,26 @@ def crear_agencia(agencia: AgenciaCreate, db: Session = Depends(get_db)):
 
 @router.post("/terapistas/")
 def crear_terapeuta(terapeuta: TerapeutaCreate, db: Session = Depends(get_db)):
+
+    existing_username = db.query(Terapistas).filter(Terapistas.username == terapeuta.username).first()
+    if existing_username:
+        raise HTTPException(status_code=400, detail="Username ya está en uso")
+
+    existing_email = db.query(Terapistas).filter(Terapistas.email == terapeuta.email).first()
+    if existing_email:
+        raise HTTPException(status_code=400, detail="Email ya está registrado")
+
+    existing_phone = db.query(Terapistas).filter(Terapistas.phone == terapeuta.phone).first()
+    if existing_phone:
+        raise HTTPException(status_code=400, detail="Número de teléfono ya está registrado")
+
+    valid_roles = ["PT", "OT", "ST", "PTA", "COTA"]
+    if terapeuta.rol not in valid_roles:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Rol inválido. Debe ser uno de: {', '.join(valid_roles)}"
+        )
+
     db_terapeuta = Terapistas(**terapeuta.dict())
     db.add(db_terapeuta)
     db.commit()
@@ -66,6 +103,17 @@ def crear_terapeuta(terapeuta: TerapeutaCreate, db: Session = Depends(get_db)):
 
 @router.post("/visitas/")
 def crear_visita(visita: VisitaCreate, db: Session = Depends(get_db)):
+
+    paciente = db.query(Pacientes).filter(Pacientes.id_paciente == visita.paciente_id).first()
+    if not paciente:
+        raise HTTPException(status_code=404, detail="Paciente no encontrado")
+    if not paciente.activo:
+        raise HTTPException(status_code=400, detail="No se pueden crear visitas para pacientes inactivos")
+
+    terapeuta = db.query(Terapistas).filter(Terapistas.user_id == visita.terapeuta_id).first()
+    if not terapeuta:
+        raise HTTPException(status_code=404, detail="Terapeuta no encontrado")
+
     assignment = db.query(PacienteTerapeuta).filter(
         PacienteTerapeuta.paciente_id == visita.paciente_id,
         PacienteTerapeuta.terapeuta_id == visita.terapeuta_id
@@ -95,11 +143,11 @@ def crear_visita(visita: VisitaCreate, db: Session = Depends(get_db)):
     nueva_visita = Visitas(
         paciente_id=visita.paciente_id,
         terapeuta_id=visita.terapeuta_id,
-        fecha=datetime.now(),
+        date=datetime.now(),
         tipo_visita=visita.tipo_visita,
         cert_period_id=visita.cert_period_id,
-        estado="Scheduled",
-        notas=visita.notas
+        status="Scheduled",
+        notes=visita.notas if visita.notas else ""
     )
 
     db.add(nueva_visita)
@@ -113,12 +161,32 @@ def crear_cert_period(
     cert_period: CertificationPeriodCreate,
     db: Session = Depends(get_db)
 ):
-    db.query(CertificationPeriods)\
-        .filter(CertificationPeriods.paciente_id == paciente_id)\
-        .update({"is_active": False})
+
+    paciente = db.query(Pacientes).filter(Pacientes.id_paciente == paciente_id).first()
+    if not paciente:
+        raise HTTPException(status_code=404, detail="Paciente no encontrado")
+
+    if cert_period.start_date > datetime.now().date():
+        raise HTTPException(status_code=400, detail="La fecha de inicio no puede ser futura")
 
     start_date = cert_period.start_date
     end_date = start_date + timedelta(days=60)
+    
+    overlapping = db.query(CertificationPeriods).filter(
+        CertificationPeriods.paciente_id == paciente_id,
+        CertificationPeriods.start_date <= end_date,
+        CertificationPeriods.end_date >= start_date
+    ).first()
+    
+    if overlapping:
+        raise HTTPException(
+            status_code=400,
+            detail="Ya existe un periodo de certificación que se sobrepone con estas fechas"
+        )
+
+    db.query(CertificationPeriods)\
+        .filter(CertificationPeriods.paciente_id == paciente_id)\
+        .update({"is_active": False})
 
     nuevo_cert = CertificationPeriods(
         paciente_id=paciente_id,
@@ -131,7 +199,7 @@ def crear_cert_period(
     db.add(nuevo_cert)
     db.commit()
     db.refresh(nuevo_cert)
-
+    
     return {
         "id": nuevo_cert.id,
         "start_date": nuevo_cert.start_date.strftime("%Y-%m-%d"),
@@ -156,7 +224,23 @@ def asignar_terapista(
     if not terapeuta:
         raise HTTPException(status_code=404, detail="Terapeuta no encontrado")
 
-    # Check if assignment already exists
+    role_mappings = {
+        "PT": ["PT", "PTA"],
+        "OT": ["OT", "COTA"],
+        "ST": ["ST"]
+    }
+
+    patient_disciplines = [d.strip() for d in paciente.discipline.split(",")]
+    valid_roles = []
+    for discipline in patient_disciplines:
+        valid_roles.extend(role_mappings.get(discipline, []))
+
+    if terapeuta.rol not in valid_roles:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"La disciplina del paciente ({paciente.discipline}) no coincide con la especialidad del terapeuta ({terapeuta.rol})"
+        )
+
     existing = db.query(PacienteTerapeuta).filter(
         PacienteTerapeuta.paciente_id == paciente_id,
         PacienteTerapeuta.terapeuta_id == asignacion.therapist_id

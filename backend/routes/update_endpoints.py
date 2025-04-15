@@ -27,6 +27,24 @@ def editar_paciente_info(
     if not paciente:
         raise HTTPException(status_code=404, detail="Paciente no encontrado")
 
+    if agency:
+        agencia = db.query(Agencias).filter(Agencias.id_agency == agency).first()
+        if not agencia:
+            raise HTTPException(status_code=404, detail="Agencia no encontrada")
+
+    if discipline:
+        valid_disciplines = ["PT", "OT", "ST"]
+        if discipline not in valid_disciplines:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Disciplina inválida. Debe ser: {', '.join(valid_disciplines)}"
+            )
+
+    if gender:
+        valid_genders = ["M", "F"]
+        if gender not in valid_genders:
+            raise HTTPException(status_code=400, detail="Género debe ser M o F")
+
     update_data = {}
     if patient_name: update_data["patient_name"] = patient_name
     if address: update_data["address"] = address
@@ -60,6 +78,27 @@ def editar_agencia_info(
     if not agencia:
         raise HTTPException(status_code=404, detail="Agencia no encontrada")
 
+    if email:
+        existing = db.query(Agencias)\
+            .filter(Agencias.email == email, Agencias.id_agency != agencia.id_agency)\
+            .first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Email ya está registrado")
+
+    if username:
+        existing = db.query(Agencias)\
+            .filter(Agencias.username == username, Agencias.id_agency != agencia.id_agency)\
+            .first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Username ya está en uso")
+
+    if phone:
+        existing = db.query(Agencias)\
+            .filter(Agencias.phone == phone, Agencias.id_agency != agencia.id_agency)\
+            .first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Número de teléfono ya está registrado")
+
     update_data = {}
     if new_agency_name: update_data["agency_name"] = new_agency_name
     if email: update_data["email"] = email
@@ -77,7 +116,7 @@ def editar_agencia_info(
 @router.put("/terapistas/{therapist_name}", response_model=Terapeuta)
 def editar_terapeuta_info(
     therapist_name: str,
-    Therapist_name: str | None = None,
+    new_therapist_name: str | None = None,
     email: str | None = None,
     phone: str | None = None,
     birthday: str | None = None,
@@ -92,8 +131,42 @@ def editar_terapeuta_info(
     if not terapeuta:
         raise HTTPException(status_code=404, detail="Terapeuta no encontrado")
 
+    if email:
+        existing = db.query(Terapistas)\
+            .filter(Terapistas.email == email, Terapistas.user_id != terapeuta.user_id)\
+            .first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Email ya está registrado")
+
+    if username:
+        existing = db.query(Terapistas)\
+            .filter(Terapistas.username == username, Terapistas.user_id != terapeuta.user_id)\
+            .first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Username ya está en uso")
+
+    if phone:
+        existing = db.query(Terapistas)\
+            .filter(Terapistas.phone == phone, Terapistas.user_id != terapeuta.user_id)\
+            .first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Número de teléfono ya está registrado")
+
+    if rol:
+        valid_roles = ["PT", "OT", "ST"]
+        if rol not in valid_roles:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Rol inválido. Debe ser uno de: {', '.join(valid_roles)}"
+            )
+
+    if gender:
+        valid_genders = ["M", "F"]
+        if gender not in valid_genders:
+            raise HTTPException(status_code=400, detail="Género debe ser M o F")
+
     update_data = {}
-    if Therapist_name: update_data["therapist_name"] = Therapist_name
+    if new_therapist_name: update_data["therapist_name"] = new_therapist_name
     if email: update_data["email"] = email
     if phone: update_data["phone"] = phone
     if birthday: update_data["birthday"] = birthday
@@ -154,9 +227,9 @@ def editar_cert_period(
 def actualizar_visita(
     visita_id: int,
     tipo_visita: Optional[str] = None,
-    notas: Optional[str] = None,
-    firma_terapeuta: Optional[bool] = None,
-    firma_paciente: Optional[bool] = None,
+    notes: Optional[str] = None,
+    firma_terapeuta: Optional[str] = None,
+    firma_paciente: Optional[str] = None,
     reopen: Optional[bool] = False,
     db: Session = Depends(get_db)
 ):
@@ -164,8 +237,7 @@ def actualizar_visita(
     if not visita:
         raise HTTPException(status_code=404, detail="Visita no encontrada")
 
-    # Check if visit is completed and not reopening
-    if visita.estado == "Completed" and not reopen:
+    if visita.status == "Completed" and not reopen:
         raise HTTPException(
             status_code=400, 
             detail="No se puede modificar una visita completada. Use reopen=true para reabrir"
@@ -173,15 +245,9 @@ def actualizar_visita(
 
     update_data = {}
 
-    # Handle reopening
-    if reopen and visita.estado == "Completed":
-        update_data = {
-            "firma_terapeuta": False,
-            "firma_paciente": False,
-            "estado": "Partial"
-        }
+    if reopen and visita.status == "Completed":
+        update_data["status"] = "Saved"
     else:
-        # Normal update flow
         if tipo_visita is not None:
             valid_types = ["EVAL", "STANDARD", "DC", "RA"]
             if tipo_visita not in valid_types:
@@ -191,29 +257,26 @@ def actualizar_visita(
                 )
             update_data["tipo_visita"] = tipo_visita
         
-        if notas is not None:
-            update_data["notas"] = notas
+        if notes is not None:
+            update_data["notes"] = notes
         if firma_terapeuta is not None:
             update_data["firma_terapeuta"] = firma_terapeuta
         if firma_paciente is not None:
             update_data["firma_paciente"] = firma_paciente
 
-        # Update visit status based on current state
-        notas_empty = not visita.notas or visita.notas.strip() == ""
-        if notas is not None:
-            notas_empty = not notas or notas.strip() == ""
+        current_notes = notes if notes is not None else visita.notes
+        current_firma_t = firma_terapeuta if firma_terapeuta is not None else visita.firma_terapeuta
+        current_firma_p = firma_paciente if firma_paciente is not None else visita.firma_paciente
 
-        firma_t = visita.firma_terapeuta if firma_terapeuta is None else firma_terapeuta
-        firma_p = visita.firma_paciente if firma_paciente is None else firma_paciente
+        notes_empty = not current_notes or current_notes.strip() == ""
 
-        if notas_empty and not firma_t and not firma_p:
-            update_data["estado"] = "No Info"
-        elif not notas_empty and firma_t and firma_p:
-            update_data["estado"] = "Completed"
+        if notes_empty and not current_firma_t and not current_firma_p:
+            update_data["status"] = "Scheduled"
+        elif not notes_empty and current_firma_t and current_firma_p:
+            update_data["status"] = "Completed"
         else:
-            update_data["estado"] = "Partial"
+            update_data["status"] = "Saved"
 
-    # Apply updates
     for key, value in update_data.items():
         setattr(visita, key, value)
 
