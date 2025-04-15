@@ -7,7 +7,8 @@ import CertificationPeriodComponent from './CertificationPeriodComponent';
 import MedicalInfoComponent from './MedicalInfoComponent';
 import DisciplinesComponent from './DisciplinesComponent';
 import ScheduleComponent from './ScheduleComponent';
-import ExercisesComponent from './ExercisesComponent'; // Importamos el nuevo componente de Ejercicios
+import ExercisesComponent from './ExercisesComponent';
+import DocumentsComponent from './DocumentsComponent'; // Importamos el nuevo componente de Documentos
 import '../../../../../styles/developer/Patients/InfoPaciente/PatientInfoPage.scss';
 
 // Patient Info Header Component
@@ -260,6 +261,21 @@ const ExercisesSection = ({ patient }) => {
   );
 };
 
+// Documents Section Component
+const DocumentsSection = ({ patient }) => {
+  // Handler for documents updates
+  const handleUpdateDocuments = (updatedDocuments) => {
+    console.log('Documents updated:', updatedDocuments);
+    // Here you would typically update the state or send data to an API
+  };
+  
+  return (
+    <div className="documents-section">
+      <DocumentsComponent patient={patient} onUpdateDocuments={handleUpdateDocuments} />
+    </div>
+  );
+};
+
 // Main Patient Information Page Component
 const PatientInfoPage = () => {
   const { patientId } = useParams();
@@ -386,6 +402,31 @@ const PatientInfoPage = () => {
               sessions: 1,
               isHEP: true
             }
+          ],
+          // Datos de documentos de ejemplo
+          documents: [
+            {
+              id: 1,
+              name: 'Evaluation Report.pdf',
+              type: 'pdf',
+              size: 2456000,
+              category: 'Medical Reports',
+              uploadedBy: 'Dr. James Wilson',
+              uploadDate: '2025-02-15T14:30:00',
+              description: 'Initial evaluation report by PT',
+              url: '/documents/eval-report.pdf'
+            },
+            {
+              id: 2,
+              name: 'Insurance Approval.pdf',
+              type: 'pdf',
+              size: 1240000,
+              category: 'Insurance',
+              uploadedBy: 'Admin Staff',
+              uploadDate: '2025-02-10T09:15:00',
+              description: 'Insurance approval for therapy sessions',
+              url: '/documents/insurance-approval.pdf'
+            }
           ]
         },
         {
@@ -495,6 +536,42 @@ const PatientInfoPage = () => {
               reps: 10,
               sessions: 2,
               isHEP: true
+            }
+          ],
+          // Datos de documentos de ejemplo para el segundo paciente
+          documents: [
+            {
+              id: 3,
+              name: 'Progress Notes - Week 1.docx',
+              type: 'docx',
+              size: 350000,
+              category: 'Progress Notes',
+              uploadedBy: 'Dr. Michael Chen',
+              uploadDate: '2025-02-20T16:45:00',
+              description: 'Weekly progress notes after first week of therapy',
+              url: '/documents/progress-notes-w1.docx'
+            },
+            {
+              id: 4,
+              name: 'Exercise Program.jpg',
+              type: 'jpg',
+              size: 1750000,
+              category: 'Assessments',
+              uploadedBy: 'Maria Gonzalez',
+              uploadDate: '2025-02-25T10:20:00',
+              description: 'Custom exercise program illustration',
+              url: '/documents/exercise-program.jpg'
+            },
+            {
+              id: 5,
+              name: 'Medical History.pdf',
+              type: 'pdf',
+              size: 3200000,
+              category: 'Medical Reports',
+              uploadedBy: 'Dr. Emily Parker',
+              uploadDate: '2025-03-05T09:30:00',
+              description: 'Complete medical history including past treatments',
+              url: '/documents/medical-history.pdf'
             }
           ]
         }
@@ -635,13 +712,7 @@ const PatientInfoPage = () => {
               <ExercisesSection patient={patient} />
             )}
             {activeTab === 'documents' && (
-              <div className="documents-placeholder">
-                <div className="placeholder-content">
-                  <i className="fas fa-file-alt"></i>
-                  <p>Documents Section</p>
-                  <span>This section will be developed in the next phase</span>
-                </div>
-              </div>
+              <DocumentsSection patient={patient} />
             )}
             {activeTab === 'notes' && (
               <div className="notes-placeholder">

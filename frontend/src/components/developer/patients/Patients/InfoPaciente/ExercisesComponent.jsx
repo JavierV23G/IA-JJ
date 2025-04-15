@@ -78,11 +78,11 @@ const ExercisesComponent = ({ patient, onUpdateExercises }) => {
               setIsLoading(false);
               setLoadingProgress(0);
               setLoadingAnimation(null);
-            }, 500);
-          }, 800);
-        }, 700);
+            }, 20);
+          }, 100);
+        }, 250);
       }
-    }, 100);
+    }, 55);
     
     // GSAP animations for page elements
     const timeline = gsap.timeline({ defaults: { ease: "power3.out" } });
